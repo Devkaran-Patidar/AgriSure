@@ -1,0 +1,1 @@
+export default function PageHero({eyebrow,title,description}){return <section className="bg-soft py-20"><div className="container-page max-w-4xl text-center"><span className="eyebrow">{eyebrow}</span><h1 className="section-title">{title}</h1><p className="section-description">{description}</p></div></section>}
