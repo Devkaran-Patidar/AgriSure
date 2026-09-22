@@ -1,7 +1,11 @@
-export default function CompanyCropMonitoring() {
-  return (
-    <div className="company-crop-monitoring">
-      <p>Company Crop Monitoring</p>
-    </div>
-  );
+import { useEffect, useState } from "react";
+import { apiRequest } from "../../lib/api";
+
+export default function CompanyReports() {
+  const [contracts, setContracts] = useState([]); const [summary, setSummary] = useState(null); const [error, setError] = useState("");
+  useEffect(() => { Promise.all([apiRequest("/contracts/"), apiRequest("/payments/summary/")]).then(([contractData, paymentData]) => { setContracts(contractData); setSummary(paymentData); }).catch((e) => setError(e.message)); }, []);
+  const exportCsv = () => { const rows = [["Contract ID", "Crop", "Quantity", "Price", "Status"], ...contracts.map((item) => [item.id, item.crop_details?.name || `Crop #${item.crop}`, item.agreed_quantity, item.agreed_price || "", item.status])]; const csv = rows.map((row) => row.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(",")).join("\n"); const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); const link = document.createElement("a"); link.href = url; link.download = "agricontract-procurement-report.csv"; link.click(); URL.revokeObjectURL(url); };
+  return <section className="section-padding bg-soft min-h-screen"><div className="container-page"><div className="flex flex-wrap items-end justify-between gap-4"><div><span className="eyebrow">Buyer reports</span><h1 className="section-title">Procurement report</h1><p className="section-description">A current view of your contracts and escrow activity.</p></div><button className="btn-primary" onClick={exportCsv} disabled={!contracts.length}>Export CSV</button></div>{error && <p className="mt-5 text-sm font-bold text-red-600">{error}</p>}<div className="mt-8 grid gap-5 sm:grid-cols-3"><Metric label="Total contracts" value={contracts.length} /><Metric label="Active contracts" value={contracts.filter((item) => ["ACTIVE", "AGREED"].includes(item.status)).length} /><Metric label="Funded escrow" value={`INR ${summary?.funded_amount ?? "-"}`} /></div><div className="table-wrap mt-8"><table><thead><tr><th>Contract</th><th>Crop</th><th>Farmer</th><th>Quantity</th><th>Status</th></tr></thead><tbody>{contracts.length === 0 ? <tr><td colSpan="5">No contracts available.</td></tr> : contracts.map((item) => <tr key={item.id}><td className="font-bold text-navy">#{item.id}</td><td>{item.crop_details?.name || `Crop #${item.crop}`}</td><td>{item.farmer_name || item.farmer_details?.farm_name || "-"}</td><td>{item.agreed_quantity}</td><td>{item.status}</td></tr>)}</tbody></table></div></div></section>;
 }
+
+function Metric({ label, value }) { return <div className="card"><p className="text-xs font-bold uppercase tracking-wide text-slate-500">{label}</p><p className="mt-3 font-heading text-3xl font-extrabold text-navy">{value}</p></div>; }

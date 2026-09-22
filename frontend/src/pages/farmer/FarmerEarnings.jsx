@@ -1,4 +1,10 @@
+import { useEffect, useState } from "react";
+import { apiRequest } from "../../lib/api";
+
 export default function FarmerEarnings() {
+  const [summary, setSummary] = useState(null);
+  const [error, setError] = useState("");
+  useEffect(() => { apiRequest("/payments/summary/").then(setSummary).catch((e) => setError(e.message)); }, []);
   return (
     <section className="section-padding">
       <div className="container-page">
@@ -6,10 +12,11 @@ export default function FarmerEarnings() {
         <h1 className="section-title">Farmer Earnings</h1>
         <p className="section-description">Summary of settled and pending payouts linked to active contracts.</p>
 
+        {error && <p className="mt-6 text-sm font-bold text-red-600">{error}</p>}
         <div className="mt-8 grid gap-5 md:grid-cols-3">
-          <Summary label="Total Earned" value="INR 4,92,000" />
-          <Summary label="Pending" value="INR 84,000" />
-          <Summary label="This Month" value="INR 1,26,000" />
+          <Summary label="Total released" value={`INR ${summary?.released_amount ?? "-"}`} />
+          <Summary label="Pending" value={`INR ${summary?.pending_amount ?? "-"}`} />
+          <Summary label="Escrow accounts" value={summary?.accounts ?? "-"} />
         </div>
       </div>
     </section>

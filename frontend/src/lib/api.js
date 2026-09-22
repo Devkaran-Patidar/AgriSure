@@ -6,10 +6,12 @@ export async function apiRequest(path, options = {}) {
   const headers = { ...(isForm ? {} : {"Content-Type":"application/json"}), ...(options.headers || {}) };
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  let response = await fetch(`${API_BASE_URL}${path}`, {...options, headers});
+  const normalizedPath = `/${path.replace(/^\/+/, "").replace(/^api\//, "")}`;
 
-  if (response.status === 401 && localStorage.getItem("refresh_token") && !path.includes("/auth/token/")) {
-    const refreshResponse = await fetch(`${API_BASE_URL}/auth/token/refresh/`, {
+  let response = await fetch(`${API_BASE_URL}${normalizedPath}`, {...options, headers});
+
+  if (response.status === 401 && localStorage.getItem("refresh_token") && !normalizedPath.includes("/auth/token/")) {
+    const refreshResponse = await fetch(`${API_BASE_URL}/accounts/auth/token/refresh/`, {
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({refresh:localStorage.getItem("refresh_token")})
@@ -17,8 +19,9 @@ export async function apiRequest(path, options = {}) {
     if (refreshResponse.ok) {
       const refreshData = await refreshResponse.json();
       localStorage.setItem("access_token", refreshData.access);
+      if (refreshData.refresh) localStorage.setItem("refresh_token", refreshData.refresh);
       headers.Authorization = `Bearer ${refreshData.access}`;
-      response = await fetch(`${API_BASE_URL}${path}`, {...options, headers});
+      response = await fetch(`${API_BASE_URL}${normalizedPath}`, {...options, headers});
     }
   }
 

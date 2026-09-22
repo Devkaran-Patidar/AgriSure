@@ -1,7 +1,2 @@
-export default function CompanyCropMonitoring() {
-  return (
-    <div className="company-crop-monitoring">
-      <p>Company Crop Monitoring</p>
-    </div>
-  );
-}
+import FarmerMessages from "../farmer/FarmerMessages";
+export default function CompanyMessages() { return <FarmerMessages />; }

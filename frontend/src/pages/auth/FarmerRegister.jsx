@@ -16,7 +16,7 @@ export default function FarmerRegister() {
 
   const submit = async (d) => {
     try {
-      await apiRequest("api/accounts/auth/register/", {
+      await apiRequest("/accounts/auth/register/", {
         method: "POST",
         body: JSON.stringify({
           role: "FARMER",
@@ -36,7 +36,7 @@ export default function FarmerRegister() {
         }),
       });
 
-      nav("/login");
+      nav("/verify-otp", { state: { email: d.email } });
     } catch (e) {
       setError(e.message);
     }

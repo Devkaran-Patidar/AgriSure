@@ -1,47 +1,59 @@
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { apiRequest } from "../../lib/api";
+import ContractCard from "../../components/contracts/ContractCard";
 
 export default function FarmerContracts() {
-  return (
-    <section className="section-padding bg-soft">
-      <div className="container-page">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <span className="eyebrow">Contracts</span>
-            <h1 className="section-title">Farmer Contracts</h1>
-          </div>
-          <Link to="/farmer/contracts/new" className="btn-primary">Create Contract</Link>
-        </div>
+  const [contracts, setContracts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-        <div className="table-wrap mt-8">
-          <table>
-            <thead>
-              <tr>
-                <th>Contract ID</th>
-                <th>Buyer</th>
-                <th>Crop</th>
-                <th>Quantity</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>#F-3021</td>
-                <td>Harvest Foods Pvt Ltd</td>
-                <td>Tomato</td>
-                <td>40 MT</td>
-                <td><span className="status status-blue">In Review</span></td>
-              </tr>
-              <tr>
-                <td>#F-2998</td>
-                <td>Agri Bulk Buyers</td>
-                <td>Onion</td>
-                <td>60 MT</td>
-                <td><span className="status status-green">Active</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+  useEffect(() => {
+    apiRequest("/contracts/")
+      .then(setContracts)
+      .catch((requestError) => setError(requestError.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <div className="page-shell">
+      <div className="container-page">
+        <span className="eyebrow">Agreements</span>
+        <h1 className="section-title">Your crop agreements</h1>
+        <p className="section-description">Review buyer requests, negotiate terms, and track signed agreements.</p>
+
+        {error && <div className="mt-4 rounded-xl bg-red-50 p-4 text-sm font-bold text-red-600">{error}</div>}
+
+        {loading ? (
+          <p className="mt-8 font-bold text-slate-400">Loading agreements...</p>
+        ) : contracts.length === 0 ? (
+          <div className="mt-8 rounded-2xl border-2 border-dashed border-slate-300 p-10 text-center">
+            <h3 className="font-heading text-xl font-bold text-navy">No agreements yet</h3>
+            <p className="mt-2 text-slate-500">Buyers will send requests based on your listed crops.</p>
+          </div>
+        ) : (
+          <div className="mt-8 grid gap-10">
+            <ContractSection title="In progress" contracts={contracts.filter((contract) => !contract.fully_signed)} role="farmer" empty="No active or pending agreements." />
+            <ContractSection title="Signed agreements" contracts={contracts.filter((contract) => contract.fully_signed)} role="farmer" signed />
+          </div>
+        )}
       </div>
+    </div>
+  );
+}
+
+function ContractSection({ title, contracts, role, signed, empty }) {
+  return (
+    <section>
+      <h2 className="font-heading text-2xl font-extrabold text-navy">{title}</h2>
+      {contracts.length === 0 ? (
+        <p className="mt-4 rounded-2xl border border-dashed border-slate-300 p-6 text-sm text-slate-500">{empty || "No signed agreements yet."}</p>
+      ) : (
+        <div className="mt-4 grid gap-5 sm:grid-cols-2">
+          {contracts.map((contract) => (
+            <ContractCard key={contract.id} contract={contract} role={role} signed={signed} />
+          ))}
+        </div>
+      )}
     </section>
   );
 }

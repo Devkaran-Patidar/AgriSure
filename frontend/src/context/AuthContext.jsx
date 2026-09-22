@@ -9,13 +9,14 @@ export function AuthProvider({children}){
 
   useEffect(()=>{
     if(!localStorage.getItem("access_token")){setLoading(false);return;}
-    apiRequest("/auth/me/").then(data=>{setUser(data);localStorage.setItem("user",JSON.stringify(data));})
+    apiRequest("/accounts/auth/profile/").then(data=>{setUser(data);localStorage.setItem("user",JSON.stringify(data));})
       .catch(()=>{logoutRequest();setUser(null);}).finally(()=>setLoading(false));
   },[]);
 
   const login=async(email,password)=>{const data=await loginRequest(email,password);setUser(data.user);return data;};
   const logout=()=>{logoutRequest();setUser(null);};
+  const updateUser=(updatedUser)=>{setUser(updatedUser);localStorage.setItem("user",JSON.stringify(updatedUser));};
 
-  return <AuthContext.Provider value={{user,loading,login,logout,isAuthenticated:!!user}}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{user,loading,login,logout,updateUser,isAuthenticated:!!user}}>{children}</AuthContext.Provider>;
 }
 export const useAuth=()=>useContext(AuthContext);

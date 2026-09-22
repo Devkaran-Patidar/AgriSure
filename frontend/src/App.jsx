@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 // Layout
 import Navbar from "./components/layout/Navbar.jsx";
 import Footer from "./components/layout/Footer.jsx";
+import WorkspaceLayout from "./components/layout/WorkspaceLayout.jsx";
 
 // Authentication
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
@@ -25,6 +26,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 
 // Farmer Pages
 import FarmerProfile from "./pages/farmer/FarmerProfile.jsx";
+import FarmerCrops from "./pages/farmer/FarmerCrops.jsx";
 import FarmerContracts from "./pages/farmer/FarmerContracts.jsx";
 import FarmerEarnings from "./pages/farmer/FarmerEarnings.jsx";
 import FarmerCropProgress from "./pages/farmer/FarmerCropProgress.jsx";
@@ -152,6 +154,7 @@ export default function App() {
           <Route
             element={<ProtectedRoute roles={["FARMER"]} />}
           >
+            <Route element={<WorkspaceLayout role="FARMER" />}>
             {/* Dashboard */}
             <Route
               path="/farmer/dashboard"
@@ -162,6 +165,12 @@ export default function App() {
             <Route
               path="/farmer/profile"
               element={<FarmerProfile />}
+            />
+
+            {/* Crops */}
+            <Route
+              path="/farmer/crops"
+              element={<FarmerCrops />}
             />
 
             {/* Contracts */}
@@ -215,6 +224,7 @@ export default function App() {
               path="/farmer/notifications"
               element={<FarmerNotifications />}
             />
+            </Route>
           </Route>
 
 
@@ -225,6 +235,7 @@ export default function App() {
           <Route
             element={<ProtectedRoute roles={["COMPANY"]} />}
           >
+            <Route element={<WorkspaceLayout role="COMPANY" />}>
             {/* Dashboard */}
             <Route
               path="/company/dashboard"
@@ -295,6 +306,7 @@ export default function App() {
               path="/company/reports"
               element={<CompanyReports />}
             />
+            </Route>
           </Route>
 
 
@@ -305,6 +317,7 @@ export default function App() {
           <Route
             element={<ProtectedRoute roles={["ADMIN"]} />}
           >
+            <Route element={<WorkspaceLayout role="ADMIN" />}>
             {/* Admin Dashboard */}
             <Route
               path="/admin/dashboard"
@@ -340,6 +353,7 @@ export default function App() {
               path="/admin/analytics"
               element={<AdminAnalytics />}
             />
+            </Route>
           </Route>
 
 

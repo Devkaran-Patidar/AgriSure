@@ -1,24 +1,12 @@
+import { useEffect, useState } from "react";
+import { apiRequest } from "../../lib/api";
+import { useAuth } from "../../context/AuthContext";
+
 export default function FarmerMessages() {
-  return (
-    <section className="section-padding">
-      <div className="container-page">
-        <span className="eyebrow">Messages</span>
-        <h1 className="section-title">Farmer Messages</h1>
-
-        <div className="mt-8 grid gap-4">
-          <Message title="Harvest Foods Pvt Ltd" body="Please confirm next dispatch lot by Monday." />
-          <Message title="AgriContract Support" body="Your document verification is in progress." />
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Message({ title, body }) {
-  return (
-    <article className="card">
-      <h2 className="font-heading text-lg font-bold text-navy">{title}</h2>
-      <p className="mt-2 text-sm text-slate-500">{body}</p>
-    </article>
-  );
+  const [messages, setMessages] = useState([]); const [contracts, setContracts] = useState([]); const [recipient, setRecipient] = useState(""); const [subject, setSubject] = useState(""); const [body, setBody] = useState(""); const [error, setError] = useState(""); const [notice, setNotice] = useState(""); const [sending, setSending] = useState(false); const { user } = useAuth();
+  const load = () => apiRequest("/communications/messages/").then(setMessages).catch((e) => setError(e.message));
+  useEffect(() => { load(); apiRequest("/contracts/").then((items) => { setContracts(items); const person = user?.role === "COMPANY" ? items[0]?.farmer_details : items[0]?.company_details; if (person) setRecipient(String(person.id || "")); }).catch((e) => setError(e.message)); }, [user?.role]);
+  const send = async (event) => { event.preventDefault(); setSending(true); setNotice(""); setError(""); try { await apiRequest("/communications/messages/", { method: "POST", body: JSON.stringify({ recipient: Number(recipient), subject, body }) }); setSubject(""); setBody(""); setNotice("Message sent successfully."); await load(); } catch (e) { setError(e.message); } finally { setSending(false); } };
+  const recipients = [...new Map(contracts.map((contract) => { const person = user?.role === "COMPANY" ? contract.farmer_details : contract.company_details; return [person?.id, person]; }).filter(([id]) => id)).values()];
+  return <section className="section-padding bg-soft min-h-screen"><div className="container-page"><span className="eyebrow">Communications</span><h1 className="section-title">Messages</h1>{error && <p className="mt-4 text-sm font-bold text-red-600">{error}</p>}{notice && <p className="mt-4 rounded-xl bg-green-50 p-4 text-sm font-bold text-primary">{notice}</p>}<form className="card mt-8 grid gap-4" onSubmit={send}><h2 className="font-heading text-xl font-bold text-navy">Send a message</h2><label><span className="label">Recipient</span><select className="input" value={recipient} onChange={(e) => setRecipient(e.target.value)} required><option value="">Select a contract partner</option>{recipients.map((person) => <option key={person.id} value={person.id}>{person.company_name || person.farm_name || person.name || person.email} ({person.email})</option>)}</select></label><input className="input" placeholder="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} required /><textarea className="input" placeholder="Message" value={body} onChange={(e) => setBody(e.target.value)} required /><button className="btn-primary" disabled={sending || !recipients.length}>{sending ? "Sending..." : "Send message"}</button>{!recipients.length && <p className="text-sm text-slate-500">Create or receive a contract before messaging a partner.</p>}</form><div className="mt-8 grid gap-4">{messages.length === 0 && <p className="text-slate-500">No messages yet.</p>}{messages.map((item) => <article className="card" key={item.id}><h2 className="font-heading text-lg font-bold text-navy">{item.subject}</h2><p className="mt-1 text-xs text-slate-500">From {item.sender_name} to {item.recipient_name}</p><p className="mt-3 text-sm text-slate-700">{item.body}</p></article>)}</div></div></section>;
 }

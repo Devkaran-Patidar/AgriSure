@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { apiRequest } from "../../lib/api";
 
 export default function VerifyOTP() {
   const nav = useNavigate();
@@ -7,7 +8,7 @@ export default function VerifyOTP() {
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
 
     if (!/^\d{6}$/.test(otp)) {
@@ -15,7 +16,15 @@ export default function VerifyOTP() {
       return;
     }
 
-    nav("/login");
+    try {
+      await apiRequest("/accounts/auth/verify-otp/", {
+        method: "POST",
+        body: JSON.stringify({ email: state?.email, otp })
+      });
+      nav("/login");
+    } catch (e) {
+      setError(e.message);
+    }
   };
 
   return (

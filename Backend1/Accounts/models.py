@@ -1,5 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils import timezone
+import random
 
 
 class User(AbstractUser):
@@ -10,6 +12,7 @@ class User(AbstractUser):
 
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=30, blank=True)
+    avatar = models.ImageField(upload_to="avatars/", blank=True, null=True)
     role = models.CharField(
         max_length=20,
         choices=Roles.choices,
@@ -22,6 +25,20 @@ class User(AbstractUser):
 
     def __str__(self):
         return f"{self.email} - {self.role}"
+
+
+class OTPVerification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="otps")
+    otp_code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_verified = models.BooleanField(default=False)
+    
+    def is_expired(self):
+        return (timezone.now() - self.created_at).total_seconds() > 600
+
+    @classmethod
+    def generate_otp(cls):
+        return str(random.randint(100000, 999999))
 
 
 class FarmerProfile(models.Model):
