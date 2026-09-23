@@ -62,9 +62,23 @@ export default function VerifyOTP() {
             </label>
 
             <button type="submit" className="btn-primary">
-              Verify and Continue
+              Verify OTP
             </button>
+            <p className="text-sm text-slate-500">
+              Didn't receive the code? <button className="text-blue-500 hover:underline">Resend</button>
+            </p>
+
+            
           </form>
+          <br />
+          <h6>Note:</h6>
+    <p className="text-sm text-slate-500">
+      Submit your application for verification.
+    </p>
+    <p className="text-sm text-slate-500">
+        Once your application is verified, you will receive a confirmation email.
+        You can then log in to your account.</p>
+        
         </div>
       </div>
     </section>

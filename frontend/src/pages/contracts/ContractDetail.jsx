@@ -12,6 +12,7 @@ export default function ContractDetail() {
   const [message, setMessage] = useState("");
   const [offerPrice, setOfferPrice] = useState("");
   const [actionPending, setActionPending] = useState("");
+  const [advancePending, setAdvancePending] = useState(false);
   const { user } = useAuth();
 
   const load = async () => {
@@ -59,7 +60,7 @@ export default function ContractDetail() {
     setMessage("");
     try {
       await apiRequest(`/contracts/${id}/${type}/`, { method: "POST" });
-      setMessage(type === "approve" ? "Agreement approved." : "Agreement signed.");
+      setMessage(type === "approve" ? "Agreement approved." : type === "sign" ? "Agreement signed." : "Delivery recorded.");
       await load();
     } catch (error) {
       setMessage(error.message);
@@ -69,6 +70,39 @@ export default function ContractDetail() {
   };
 
   const printContract = () => window.print();
+
+  const releaseFinalPayment = async () => {
+    const finalMilestone = contract.payment_milestones?.find((item) => item.sequence === 2 && item.status !== "RELEASED") || null;
+    if (!finalMilestone) {
+      setMessage("No final milestone is available for payment release yet.");
+      return;
+    }
+
+    setActionPending("release-final");
+    setMessage("");
+    try {
+      await apiRequest(`/payments/milestones/${finalMilestone.id}/release/`, { method: "POST" });
+      setMessage("Final payment released successfully.");
+      await load();
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setActionPending("");
+    }
+  };
+
+  const payAdvance = async () => {
+    setAdvancePending(true);
+    try {
+      await apiRequest(`/payments/contracts/${id}/advance/`, { method: "POST" });
+      setMessage("20% advance paid successfully.");
+      await load();
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setAdvancePending(false);
+    }
+  };
 
   if (!contract) return <div className="grid min-h-[60vh] place-items-center">Loading...</div>;
 
@@ -91,6 +125,8 @@ export default function ContractDetail() {
               ["Crop", contract.crop_details?.name || "—"],
               ["Quantity", contract.agreed_quantity],
               ["Price", contract.agreed_price ? formatCurrency(contract.agreed_price) : "Pending"],
+              ["Total contract value", contract.total_amount ? formatCurrency(contract.total_amount) : "Pending negotiation"],
+              ["20% advance", contract.advance_amount ? formatCurrency(contract.advance_amount) : "Pending negotiation"],
               ["Farmer", contract.farmer_name],
               ["Buyer", contract.company_name],
               ["Created", new Date(contract.created_at).toLocaleDateString()],
@@ -128,7 +164,24 @@ export default function ContractDetail() {
             >
               {actionPending === "sign" ? "Signing..." : "Sign digital agreement"}
             </button>
+            {user?.role === "FARMER" && contract.status === "ACTIVE" && (
+              <button className="btn-primary" disabled={Boolean(actionPending)} onClick={() => action("deliver")}>
+                {actionPending === "deliver" ? "Recording delivery..." : "Mark crop delivered"}
+              </button>
+            )}
+            {user?.role === "COMPANY" && contract.status === "COMPLETED" && (
+              <button className="btn-primary" disabled={Boolean(actionPending)} onClick={releaseFinalPayment}>
+                {actionPending === "release-final" ? "Releasing..." : "Release final payment"}
+              </button>
+            )}
           </div>
+          {contract.fully_signed && user?.role === "COMPANY" && (
+            <div className="mt-6 rounded-2xl border border-emerald-100 bg-emerald-50 p-5">
+              <h2 className="font-heading text-lg font-bold text-navy">Payment commitment</h2>
+              <p className="mt-1 text-sm text-slate-600">Pay the 20% advance of {formatCurrency(contract.advance_amount)} after the digital contract is signed.</p>
+              <button className="btn-primary mt-4" disabled={advancePending} onClick={payAdvance}>{advancePending ? "Processing..." : "Pay 20% advance"}</button>
+            </div>
+          )}
           {message && <p className="mt-4 text-sm font-bold text-primary">{message}</p>}
         </div>
         <div className="card">

@@ -99,6 +99,7 @@ export default function App() {
             element={<InfoPage type="contact" />}
           />
 
+          {/* <Footer /> */}
 
           {/* =====================================================
               AUTHENTICATION
@@ -387,7 +388,7 @@ export default function App() {
         </Routes>
       </main>
 
-      <Footer />
+      {/* <Footer /> */}
     </>
   );
 }
