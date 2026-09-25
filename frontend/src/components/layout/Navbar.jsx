@@ -36,7 +36,7 @@ export default function Navbar() {
             <Leaf size={22} />
           </span>
           <span>
-            <strong className="font-heading text-lg text-navy">AgriContract</strong>
+            <strong className="font-heading text-lg text-navy">AgriSure</strong>
             <small className="block text-[10px] font-semibold text-slate-400">{roleLabel}</small>
           </span>
         </Link>

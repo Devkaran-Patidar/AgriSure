@@ -6,7 +6,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.mail import send_mail
 from django.conf import settings
 
-from .models import User, OTPVerification
+from .models import User, OTPVerification, VerificationDocument
 from .serializer import UserSerializer, FarmerProfileSerializer, CompanyProfileSerializer
 
 
@@ -34,6 +34,7 @@ def loginView(request):
         request,
         username=email,
         password=password,
+        # is_verified=True,
     )
 
     if user is None:
@@ -43,7 +44,6 @@ def loginView(request):
             },
             status=status.HTTP_401_UNAUTHORIZED,
         )
-
     if not user.is_active:
         return Response(
             {
@@ -117,12 +117,27 @@ def loginView(request):
 
 @api_view(["POST"])
 def registerView(request):
+    data = request.data.dict()
+    for profile_key in ("farmer", "company"):
+        profile_data = data.get(profile_key)
+        if isinstance(profile_data, str):
+            import json
+            try:
+                data[profile_key] = json.loads(profile_data)
+            except json.JSONDecodeError:
+                return Response(
+                    {"message": f"Invalid {profile_key} registration data."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
     serializer = UserSerializer(
-        data=request.data
+        data=data
     )
 
     if serializer.is_valid():
         user = serializer.save()
+        for uploaded_file in request.FILES.getlist("verification_documents") + request.FILES.getlist("documents"):
+            VerificationDocument.objects.create(user=user, file=uploaded_file)
         user.is_active = False # Deactivate until OTP verified
         user.save()
 
@@ -196,6 +211,21 @@ def profileView(request):
         
     user = request.user
     if request.method in ["PATCH", "PUT"]:
+        password = request.data.get("new_password")
+        if password:
+            current_password = request.data.get("current_password")
+            if not current_password or not user.check_password(current_password):
+                return Response(
+                    {"message": "Current password is incorrect."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if len(password) < 8:
+                return Response(
+                    {"message": "New password must contain at least 8 characters."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            user.set_password(password)
+
         for field in ["first_name", "last_name", "phone"]:
             if field in request.data:
                 setattr(user, field, request.data.get(field, ""))
@@ -214,6 +244,8 @@ def profileView(request):
                 serializer = profile_serializer(profile, data=profile_payload, partial=True)
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
+        if password:
+            user.save(update_fields=["password"])
     response_data = {
         "id": user.id,
         "email": user.email,
@@ -236,6 +268,16 @@ def profileView(request):
                 "district": profile.district,
                 "land_size_acres": str(profile.land_size_acres),
                 "khasra_number": profile.khasra_number,
+                "aadhar_number": profile.aadhar_number,
+                "pan_number": profile.pan_number,
+                "bank_account_number": profile.bank_account_number,
+                "ifsc_code": profile.ifsc_code,
+                "bank_name": profile.bank_name,
+                "branch_name": profile.branch_name,
+                "verification_documents": [
+                    request.build_absolute_uri(document.file.url)
+                    for document in user.verification_documents.all()
+                ],
                 "verification_status": profile.verification_status,
                 "created_at": profile.created_at,
             }
@@ -252,6 +294,10 @@ def profileView(request):
                 "company_address": profile.company_address,
                 "gst_number": profile.gst_number,
                 "licence_number": profile.licence_number,
+                "verification_documents": [
+                    request.build_absolute_uri(document.file.url)
+                    for document in user.verification_documents.all()
+                ],
                 "verification_status": profile.verification_status,
             }
         except:

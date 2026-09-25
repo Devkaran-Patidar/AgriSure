@@ -1,6 +1,8 @@
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.core.mail import send_mail
+from django.conf import settings
 from Accounts.models import User, FarmerProfile, CompanyProfile
 from contracts.models import Contract
 from disputes.models import Dispute
@@ -8,6 +10,7 @@ from monitoring.models import CropUpdate, Inspection
 from payments.models import FundingTransaction
 from .permissions import IsAdmin
 
+from email_service.email_service import Verification_email
 class AdminSummaryView(APIView):
     permission_classes = [IsAdmin]
     def get(self, request):
@@ -33,28 +36,77 @@ class AdminSummaryView(APIView):
 
 class UserListView(APIView):
     permission_classes = [IsAdmin]
+
+    def _user_data(self, user, request):
+        profile = None
+        if user.role == "FARMER":
+            profile = getattr(user, "farmer_profile", None)
+        elif user.role == "COMPANY":
+            profile = getattr(user, "company_profile", None)
+
+        verification_status = profile.verification_status if profile else ("VERIFIED" if user.is_verified else "PENDING")
+        documents = [
+            {
+                "name": document.file.name.rsplit("/", 1)[-1],
+                "url": request.build_absolute_uri(document.file.url),
+                "uploaded_at": document.uploaded_at,
+            }
+            for document in user.verification_documents.all()
+        ]
+        profile_data = {}
+        if profile:
+            profile_data = {
+                field.name: getattr(profile, field.name)
+                for field in profile._meta.fields
+                if field.name not in {"id", "user", "verification_status", "created_at"}
+            }
+        return {
+            "id": user.id,
+            "email": user.email,
+            "username": user.username,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "phone": user.phone,
+            "role": user.role,
+            "display_name": (profile.farm_name if user.role == "FARMER" and profile else profile.company_name if user.role == "COMPANY" and profile else user.get_full_name() or user.email),
+            "verification_status": verification_status,
+            "is_verified": user.is_verified,
+            "is_active": user.is_active,
+            "date_joined": user.date_joined,
+            "profile": profile_data,
+            "documents": documents,
+        }
+
     def get(self, request):
-        users = []
-        queryset = User.objects.select_related("farmer_profile", "company_profile").order_by("-date_joined")
-        for user in queryset:
-            display_name = user.get_full_name() or user.email
-            verification_status = "N/A"
-            if user.role == "FARMER" and hasattr(user, "farmer_profile"):
-                display_name = user.farmer_profile.farm_name
-                verification_status = user.farmer_profile.verification_status
-            elif user.role == "COMPANY" and hasattr(user, "company_profile"):
-                display_name = user.company_profile.company_name
-                verification_status = user.company_profile.verification_status
-            users.append({
-                "id": user.id,
-                "email": user.email,
-                "role": user.role,
-                "display_name": display_name,
-                "verification_status": verification_status,
-                "is_active": user.is_active,
-                "date_joined": user.date_joined,
-            })
-        return Response(users)
+        queryset = User.objects.select_related("farmer_profile", "company_profile").prefetch_related("verification_documents").exclude(role="ADMIN").order_by("-date_joined")
+        return Response([self._user_data(user, request) for user in queryset])
+
+    def post(self, request):
+        user = User.objects.select_related("farmer_profile", "company_profile").filter(pk=request.data.get("user_id")).first()
+        decision = request.data.get("decision")
+        if not user or decision not in {"verify", "reject"}:
+            return Response({"detail": "A valid user_id and decision are required."}, status=400)
+
+        verified = decision == "verify"
+        user.is_verified = verified
+        user.is_active = verified
+        user.save(update_fields=["is_verified", "is_active"])
+        profile = getattr(user, "farmer_profile", None) or getattr(user, "company_profile", None)
+        if profile:
+            profile.verification_status = "VERIFIED" if verified else "REJECTED"
+            profile.save(update_fields=["verification_status"])
+
+            # Send verification email
+        Verification_email(user.email, user.username, "VERIFIED" if verified else "REJECTED")
+
+        send_mail(
+            f"AgriContract account {'verified' if verified else 'not verified'}",
+            f"Hello {user.get_full_name() or user.email},\n\nYour AgriContract account has been {'verified' if verified else 'not verified'} by the administrator.",
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+            fail_silently=False,
+        )
+        return Response(self._user_data(user, request))
 
 class AdminContractsView(APIView):
     permission_classes = [IsAdmin]

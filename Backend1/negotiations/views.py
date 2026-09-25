@@ -5,6 +5,7 @@ from .models import NegotiationOffer
 from .serializers import NegotiationOfferSerializer
 from contracts.models import Contract
 from communications.models import Notification
+from payments.views import get_or_create_account
 
 class NegotiationOfferViewSet(viewsets.ModelViewSet):
     serializer_class = NegotiationOfferSerializer
@@ -28,18 +29,22 @@ class NegotiationOfferViewSet(viewsets.ModelViewSet):
     def accept(self, request, pk=None):
         offer = self.get_object()
         user = request.user
-        
-        # Cannot accept own offer
+
         if offer.offered_by == user:
             return Response({"detail": "You cannot accept your own offer."}, status=status.HTTP_400_BAD_REQUEST)
+
+        contract = offer.contract
+        if contract.status in ('ACTIVE', 'COMPLETED', 'CANCELLED'):
+            return Response({"detail": "This contract is already in a later lifecycle stage and cannot be renegotiated."}, status=status.HTTP_400_BAD_REQUEST)
 
         offer.status = 'ACCEPTED'
         offer.save()
 
-        contract = offer.contract
         contract.agreed_price = offer.offered_price
         contract.status = 'AGREED'
         contract.save()
+        NegotiationOffer.objects.filter(contract=contract, status='PENDING').exclude(pk=offer.pk).update(status='REJECTED')
+        get_or_create_account(contract)
 
         Notification.objects.bulk_create([
             Notification(user=contract.farmer.user, title=f"Contract #{contract.id} agreed", message="Your negotiated price was accepted. Review and sign the contract.", notification_type="CONTRACT"),

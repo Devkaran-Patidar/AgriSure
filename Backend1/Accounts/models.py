@@ -18,6 +18,7 @@ class User(AbstractUser):
         choices=Roles.choices,
         default=Roles.FARMER,
     )
+    is_verified = models.BooleanField(default=False)
 
     # Login using email
     USERNAME_FIELD = "email"
@@ -32,7 +33,7 @@ class OTPVerification(models.Model):
     otp_code = models.CharField(max_length=6)
     created_at = models.DateTimeField(auto_now_add=True)
     is_verified = models.BooleanField(default=False)
-    
+
     def is_expired(self):
         return (timezone.now() - self.created_at).total_seconds() > 600
 
@@ -59,6 +60,12 @@ class FarmerProfile(models.Model):
     )
 
     khasra_number = models.CharField(max_length=100)
+    aadhar_number = models.CharField(max_length=20, blank=True, null=True)
+    pan_number = models.CharField(max_length=20, blank=True, null=True)
+    bank_account_number = models.CharField(max_length=50, blank=True, null=True)
+    ifsc_code = models.CharField(max_length=20, blank=True, null=True)
+    bank_name = models.CharField(max_length=150, blank=True, null=True)
+    branch_name = models.CharField(max_length=150, blank=True, null=True)
 
     verification_status = models.CharField(
         max_length=20,
@@ -109,3 +116,16 @@ class CompanyProfile(models.Model):
 
     def __str__(self):
         return f"{self.company_name} - {self.user.email}"
+
+
+class VerificationDocument(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="verification_documents",
+    )
+    file = models.FileField(upload_to="verification_documents/")
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.email} - {self.file.name}"

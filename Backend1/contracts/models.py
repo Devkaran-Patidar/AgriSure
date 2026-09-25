@@ -1,4 +1,5 @@
 from django.db import models
+from decimal import Decimal
 from Accounts.models import FarmerProfile, CompanyProfile
 from farmer.models import Crop
 
@@ -36,3 +37,11 @@ class Contract(models.Model):
     @property
     def is_fully_signed(self):
         return bool(self.farmer_signed_at and self.company_signed_at)
+
+    @property
+    def total_amount(self):
+        return (self.agreed_price or 0) * self.agreed_quantity
+
+    @property
+    def advance_amount(self):
+        return self.total_amount * Decimal("0.20")

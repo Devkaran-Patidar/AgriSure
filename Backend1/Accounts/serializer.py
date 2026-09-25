@@ -18,6 +18,12 @@ class FarmerProfileSerializer(serializers.ModelSerializer):
             "district",
             "land_size_acres",
             "khasra_number",
+            "aadhar_number",
+            "pan_number",
+            "bank_account_number",
+            "ifsc_code",
+            "bank_name",
+            "branch_name",
             "verification_status",
             "created_at",
         ]

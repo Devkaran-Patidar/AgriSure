@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Contract
 from farmer.serializers import CropSerializer
+from payments.serializers import MilestoneSerializer
 
 class ContractSerializer(serializers.ModelSerializer):
     crop_details = CropSerializer(source='crop', read_only=True)
@@ -9,6 +10,9 @@ class ContractSerializer(serializers.ModelSerializer):
     farmer_details = serializers.SerializerMethodField()
     company_details = serializers.SerializerMethodField()
     fully_signed = serializers.BooleanField(source='is_fully_signed', read_only=True)
+    total_amount = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+    advance_amount = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+    payment_milestones = MilestoneSerializer(many=True, read_only=True)
 
     class Meta:
         model = Contract
@@ -26,6 +30,12 @@ class ContractSerializer(serializers.ModelSerializer):
         
         if user.role != 'COMPANY':
             raise serializers.ValidationError("Only companies can initiate a contract request.")
+
+        if Contract.objects.filter(
+            company=user.company_profile,
+            crop=validated_data['crop'],
+        ).exclude(status='CANCELLED').exists():
+            raise serializers.ValidationError("A request for this crop already exists.")
             
         validated_data['company'] = user.company_profile
         validated_data['farmer'] = validated_data['crop'].farmer
