@@ -1,19 +1,23 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import {
   BarChart3,
   Bell,
+  ChevronLeft,
   ClipboardList,
   FileText,
   Handshake,
   LayoutDashboard,
   Leaf,
   MessageSquare,
+  Menu,
   Search,
   ShieldCheck,
   Sprout,
   User,
   Wallet,
+  X,
 } from "lucide-react";
 
 const NAV = {
@@ -55,31 +59,87 @@ const LABELS = {
   ADMIN: "Admin console",
 };
 
+const COLLAPSE_KEY = "workspace_sidebar_collapsed";
+
 export default function WorkspaceLayout({ role }) {
   const { user } = useAuth();
+  const { pathname } = useLocation();
   const items = NAV[role] || [];
 
+  // Desktop fold/unfold: persisted so the choice sticks across page loads.
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem(COLLAPSE_KEY) === "1");
+  // Mobile off-canvas drawer: closed by default, opened with the hamburger button.
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem(COLLAPSE_KEY, collapsed ? "1" : "0");
+  }, [collapsed]);
+
+  // Close the mobile drawer whenever the route changes, and stop the page
+  // from scrolling behind it while it's open.
+  useEffect(() => setMobileOpen(false), [pathname]);
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileOpen]);
+
   return (
-    <div className="workspace-shell">
-      <aside className="workspace-sidebar">
+    <div className={`workspace-shell${mobileOpen ? " mobile-open" : ""}`}>
+      <div className="workspace-mobile-bar">
+        <button
+          type="button"
+          className="workspace-fold-btn"
+          onClick={() => setMobileOpen(true)}
+          aria-label="Open navigation"
+        >
+          <Menu size={16} />
+        </button>
+        <span>{LABELS[role]}</span>
+      </div>
+
+      <div className="workspace-backdrop" onClick={() => setMobileOpen(false)} />
+
+      <aside className={`workspace-sidebar${collapsed ? " is-collapsed" : ""}`}>
         <div className="workspace-sidebar-head">
-          <p className="workspace-sidebar-eyebrow">{LABELS[role]}</p>
-          <p className="workspace-sidebar-user">{user?.email}</p>
+          <div className="workspace-sidebar-role">
+            <span className="workspace-sidebar-role-label">{LABELS[role]}</span>
+            <span className="workspace-sidebar-role-user">{user?.email}</span>
+          </div>
+          <button
+            type="button"
+            className="workspace-fold-btn desktop-only"
+            onClick={() => setCollapsed((value) => !value)}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <button
+            type="button"
+            className="workspace-mobile-close"
+            onClick={() => setMobileOpen(false)}
+            aria-label="Close navigation"
+          >
+            <X size={16} />
+          </button>
         </div>
+
         <nav className="workspace-nav">
           {items.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
               end={to.endsWith("/dashboard")}
+              title={collapsed ? label : undefined}
               className={({ isActive }) => `workspace-nav-link${isActive ? " active" : ""}`}
             >
               <Icon size={18} />
-              <span>{label}</span>
+              <span className="workspace-nav-label">{label}</span>
             </NavLink>
           ))}
         </nav>
       </aside>
+
       <div className="workspace-content">
         <Outlet />
       </div>

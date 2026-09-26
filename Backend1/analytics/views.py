@@ -139,3 +139,37 @@ class AdminDisputesView(APIView):
                 "contract__crop__name", "contract__farmer__farm_name", "contract__company__company_name",
             ).order_by("-created_at")
         ))
+
+
+from django.utils import timezone
+from disputes.models import Dispute
+ 
+ 
+class AdminDisputeDetailView(APIView):
+    permission_classes = [IsAdmin]
+ 
+    def patch(self, request, pk):
+        dispute = Dispute.objects.filter(pk=pk).first()
+        if not dispute:
+            return Response({"detail": "Dispute not found."}, status=404)
+ 
+        next_status = request.data.get("status")
+        valid_statuses = dict(Dispute.STATUS_CHOICES)
+        if next_status not in valid_statuses:
+            return Response({"detail": "A valid status is required."}, status=400)
+ 
+        dispute.status = next_status
+        if next_status in ("RESOLVED", "REJECTED"):
+            dispute.resolved_at = timezone.now()
+            outcome = request.data.get("outcome")
+            if outcome:
+                dispute.outcome = outcome
+        dispute.save(update_fields=["status", "resolved_at", "outcome"])
+ 
+        return Response({
+            "id": dispute.id,
+            "status": dispute.status,
+            "resolved_at": dispute.resolved_at,
+            "outcome": dispute.outcome,
+        })
+ 
