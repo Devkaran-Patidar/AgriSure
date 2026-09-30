@@ -1,22 +1,24 @@
 import { useEffect, useState } from "react";
 import { apiRequest } from "../../lib/api";
+import { useLanguage } from "../../context/LanguageContext";
 
 export default function FarmerEarnings() {
+  const { t } = useLanguage();
   const [summary, setSummary] = useState(null);
   const [error, setError] = useState("");
   useEffect(() => { apiRequest("/payments/summary/").then(setSummary).catch((e) => setError(e.message)); }, []);
   return (
     <section className="section-padding">
       <div className="container-page">
-        <span className="eyebrow">Earnings</span>
-        <h1 className="section-title">Farmer Earnings</h1>
-        <p className="section-description">Summary of settled and pending payouts linked to active contracts.</p>
+        <span className="eyebrow">{t("earnings")}</span>
+        <h1 className="section-title">{t("farmerEarnings")}</h1>
+        <p className="section-description">{t("earningsDescription")}</p>
 
         {error && <p className="mt-6 text-sm font-bold text-red-600">{error}</p>}
         <div className="mt-8 grid gap-5 md:grid-cols-3">
-          <Summary label="Total released" value={`INR ${summary?.released_amount ?? "-"}`} />
-          <Summary label="Pending" value={`INR ${summary?.pending_amount ?? "-"}`} />
-          <Summary label="Escrow accounts" value={summary?.accounts ?? "-"} />
+          <Summary label={t("totalReleased")} value={`INR ${summary?.released_amount ?? "-"}`} />
+          <Summary label={t("pending")} value={`INR ${summary?.pending_amount ?? "-"}`} />
+          <Summary label={t("escrowAccounts")} value={summary?.accounts ?? "-"} />
         </div>
       </div>
     </section>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useLanguage } from "../../context/LanguageContext";
 import {
   BarChart3,
   Bell,
@@ -22,14 +23,14 @@ import {
 
 const NAV = {
   FARMER: [
-    { to: "/farmer/dashboard", label: "Overview", icon: LayoutDashboard },
-    { to: "/farmer/crops", label: "My crops", icon: Sprout },
-    { to: "/farmer/contracts", label: "Agreements", icon: FileText },
-    { to: "/farmer/crop-progress", label: "Crop progress", icon: Leaf },
-    { to: "/farmer/payments", label: "Payments", icon: Wallet },
-    { to: "/farmer/messages", label: "Messages", icon: MessageSquare },
-    { to: "/farmer/notifications", label: "Notifications", icon: Bell },
-    { to: "/farmer/profile", label: "Profile", icon: User },
+    { to: "/farmer/dashboard", label: "overview", icon: LayoutDashboard },
+    { to: "/farmer/crops", label: "myCrops", icon: Sprout },
+    { to: "/farmer/contracts", label: "agreements", icon: FileText },
+    { to: "/farmer/crop-progress", label: "cropProgress", icon: Leaf },
+    { to: "/farmer/payments", label: "payments", icon: Wallet },
+    { to: "/farmer/messages", label: "messages", icon: MessageSquare },
+    // { to: "/farmer/notifications", label: "notifications", icon: Bell },
+    { to: "/farmer/profile", label: "profile", icon: User },
   ],
   COMPANY: [
     { to: "/company/dashboard", label: "Overview", icon: LayoutDashboard },
@@ -54,15 +55,16 @@ const NAV = {
 };
 
 const LABELS = {
-  FARMER: "Farmer workspace",
-  COMPANY: "Buyer workspace",
-  ADMIN: "Admin console",
+  FARMER: "farmerWorkspace",
+  COMPANY: "buyerWorkspace",
+  ADMIN: "adminConsole",
 };
 
 const COLLAPSE_KEY = "workspace_sidebar_collapsed";
 
 export default function WorkspaceLayout({ role }) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { pathname } = useLocation();
   const items = NAV[role] || [];
 
@@ -94,7 +96,7 @@ export default function WorkspaceLayout({ role }) {
         >
           <Menu size={16} />
         </button>
-        <span>{LABELS[role]}</span>
+        <span>{t(LABELS[role])}</span>
       </div>
 
       <div className="workspace-backdrop" onClick={() => setMobileOpen(false)} />
@@ -102,7 +104,7 @@ export default function WorkspaceLayout({ role }) {
       <aside className={`workspace-sidebar${collapsed ? " is-collapsed" : ""}`}>
         <div className="workspace-sidebar-head">
           <div className="workspace-sidebar-role">
-            <span className="workspace-sidebar-role-label">{LABELS[role]}</span>
+            <span className="workspace-sidebar-role-label">{t(LABELS[role])}</span>
             <span className="workspace-sidebar-role-user">{user?.email}</span>
           </div>
           <button
@@ -130,11 +132,11 @@ export default function WorkspaceLayout({ role }) {
               key={to}
               to={to}
               end={to.endsWith("/dashboard")}
-              title={collapsed ? label : undefined}
+              title={collapsed ? t(label) : undefined}
               className={({ isActive }) => `workspace-nav-link${isActive ? " active" : ""}`}
             >
               <Icon size={18} />
-              <span className="workspace-nav-label">{label}</span>
+              <span className="workspace-nav-label">{t(label)}</span>
             </NavLink>
           ))}
         </nav>

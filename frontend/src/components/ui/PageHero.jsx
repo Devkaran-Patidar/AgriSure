@@ -10,8 +10,8 @@ import { motion } from "framer-motion";
 export default function PageHero({ eyebrow, title, description, image, badges = [], cta }) {
   if (!image) {
     return (
-      <section className="bg-soft py-20">
-        <div className="container-page max-w-4xl text-center">
+      <section className="bg-soft py-10">
+        <div className="container-page max-w-4xl text-left">
           <span className="eyebrow">{eyebrow}</span>
           <h1 className="section-title">{title}</h1>
           <p className="section-description">{description}</p>
@@ -51,7 +51,7 @@ export default function PageHero({ eyebrow, title, description, image, badges = 
             <img
               src={image}
               alt=""
-              className="aspect-[4/5] w-full object-cover sm:aspect-[5/4] lg:aspect-[4/5]"
+              className=" w-full object-cover sm:aspect-[5/4] lg:aspect-[8/5]"
               loading="lazy"
             />
           </div>

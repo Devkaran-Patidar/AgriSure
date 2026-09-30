@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { apiRequest } from "../../lib/api";
 import { Link } from "react-router-dom";
+import { useLanguage } from "../../context/LanguageContext";
 
 const initialForm = {
   name: "",
@@ -19,6 +20,7 @@ const initialForm = {
 };
 
 export default function FarmerCrops() {
+  const { t } = useLanguage();
   const [crops, setCrops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -162,12 +164,11 @@ export default function FarmerCrops() {
           <div>
 
             <h5 className="section-title text-sm font-bold text-navy">
-              My Crops
+              {t("myCrops")}
             </h5>
 
             <p className="mt-2 max-w-2xl text-slate-500">
-              Add crops that you plan to cultivate and make
-              available for contract farming opportunities.
+              {t("cropsDescription")}
             </p>
           </div>
 
@@ -177,14 +178,14 @@ export default function FarmerCrops() {
               className="btn-primary"
               onClick={showForm ? closeForm : openNewCropForm}
             >
-              {showForm ? "Close Form" : "Add Crop for Contract"}
+              {showForm ? t("closeForm") : t("addCropContract")}
             </button>
 
             <Link
               className="btn-secondary"
               to="/farmer/profile"
             >
-              View Profile
+              {t("viewProfile")}
             </Link>
           </div>
         </div>

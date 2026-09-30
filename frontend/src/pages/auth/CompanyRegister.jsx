@@ -2,6 +2,8 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { apiRequest } from "../../lib/api";
+import { useLanguage } from "../../context/LanguageContext";
+import LanguageSwitcher from "../../components/auth/LanguageSwitcher";
 
 export default function CompanyRegister() {
   const {
@@ -11,6 +13,7 @@ export default function CompanyRegister() {
   } = useForm();
 
   const nav = useNavigate();
+  const { t } = useLanguage();
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -65,19 +68,21 @@ export default function CompanyRegister() {
     <section className="bg-soft py-14">
       <div className="container-page max-w-4xl">
         <div className="card">
-          <div className="mb-8 text-center">
+          <div className="mb-8">
+            <div className="mb-6 flex justify-end"><LanguageSwitcher /></div>
+            <div className="text-center">
             <p className="text-sm font-semibold uppercase tracking-wider text-primary">
-              Buyer Onboarding
+              {t("buyerOnboarding")}
             </p>
 
             <h1 className="mt-2 text-3xl font-bold text-gray-900">
-              Register as Company
+              {t("registerCompany")}
             </h1>
 
             <p className="mt-2 text-gray-600">
-              Create your company account to connect with farmers and manage
-              contract farming agreements.
+              {t("companyDescription")}
             </p>
+            </div>
           </div>
 
           {error && (

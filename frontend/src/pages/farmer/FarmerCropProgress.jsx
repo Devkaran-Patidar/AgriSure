@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { apiRequest } from "../../lib/api";
+import { useLanguage } from "../../context/LanguageContext";
 
 export default function FarmerCropProgress() {
+  const { t } = useLanguage();
   const [crops, setCrops] = useState([]);
   const [updates, setUpdates] = useState([]);
   const [form, setForm] = useState({
@@ -144,15 +146,14 @@ export default function FarmerCropProgress() {
 
         {/* Header */}
         <div className="max-w-3xl">
-          <span className="eyebrow">Crop Monitoring</span>
+          <span className="eyebrow">{t("cropMonitoring")}</span>
 
           <h1 className="section-title mt-2">
-            Track your crop progress
+            {t("trackCropProgress")}
           </h1>
 
           <p className="mt-3 text-sm leading-6 text-slate-600 md:text-base">
-            Submit regular field updates so buyers can monitor crop development,
-            production progress, and expected harvest status.
+            {t("cropMonitoringDescription")}
           </p>
         </div>
 

@@ -3,19 +3,22 @@ import { ChevronDown, Leaf, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { getDashboardPathByRole } from "../../lib/routeSecurity";
+import { useLanguage } from "../../context/LanguageContext";
+import LanguageSwitcher from "../auth/LanguageSwitcher";
 
 const publicLinks = [
-  ["/", "Overview"],
-  ["/about", "About"],
-  ["/features", "Features"],
-  ["/how-it-works", "How It Works"],
-  ["/contact", "Contact"],
+  ["/", "overview"],
+  ["/about", "about"],
+  ["/features", "features"],
+  ["/how-it-works", "howItWorks"],
+  ["/contact", "contact"],
 ];
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [registerOpen, setRegisterOpen] = useState(false);
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const dashboardPath = getDashboardPathByRole(user?.role);
   const roleLabel = user?.role === "COMPANY"
@@ -24,7 +27,7 @@ export default function Navbar() {
       ? "Farmer workspace"
       : user?.role === "ADMIN"
         ? "Admin console"
-        : "Secure Farming. Assured Market.";
+        : t("secureFarming");
   const closeMenu = () => { setOpen(false); setRegisterOpen(false); };
   const signOut = () => { logout(); closeMenu(); navigate("/"); };
 
@@ -48,19 +51,19 @@ export default function Navbar() {
               to={to}
               className={({ isActive }) => `text-sm font-bold ${isActive ? "text-primary" : "text-slate-500 hover:text-primary"}`}
             >
-              {label}
+              {t(label)}
             </NavLink>
           ))}
 
           {!user && (
             <div className="relative">
               <button onClick={() => setRegisterOpen(!registerOpen)} className="flex items-center gap-1 text-sm font-bold text-slate-500">
-                Register <ChevronDown size={15} />
+                {t("register")} <ChevronDown size={15} />
               </button>
               {registerOpen && (
                 <div className="absolute right-0 top-9 w-48 rounded-2xl border border-slate-100 bg-white p-2 shadow-xl">
                   <Link className="block rounded-xl p-3 text-sm font-bold hover:bg-soft" to="/register/farmer" onClick={closeMenu}>Register as Farmer</Link>
-                  <Link className="block rounded-xl p-3 text-sm font-bold hover:bg-soft" to="/register/company" onClick={closeMenu}>Register as Buyer</Link>
+                  <Link className="block rounded-xl p-3 text-sm font-bold hover:bg-soft" to="/register/company" onClick={closeMenu}>{t("registerBuyer")}</Link>
                 </div>
               )}
             </div>
@@ -68,15 +71,16 @@ export default function Navbar() {
 
           {user ? (
             <>
-              <Link to={dashboardPath} className="btn-secondary">Open workspace</Link>
-              <button className="btn-primary" onClick={signOut}>Logout</button>
+              <Link to={dashboardPath} className="btn-secondary">{t("openWorkspace")}</Link>
+              <button className="btn-primary" onClick={signOut}>{t("logout")}</button>
             </>
           ) : (
             <>
-              <Link to="/login" className="text-sm font-bold text-slate-500">Login</Link>
-              <Link to="/register" className="btn-primary">Get Started</Link>
+              <Link to="/login" className="text-sm font-bold text-slate-500">{t("login")}</Link>
+              <Link to="/register" className="btn-primary">{t("getStartedNav")}</Link>
             </>
           )}
+          <LanguageSwitcher />
         </nav>
 
         <button
@@ -93,19 +97,20 @@ export default function Navbar() {
         <div className="border-t border-slate-100 bg-white p-4 lg:hidden">
           <div className="container-page grid gap-2">
             {!user && publicLinks.map(([to, label]) => (
-              <Link key={to} onClick={closeMenu} className="rounded-xl p-3 font-bold hover:bg-soft" to={to}>{label}</Link>
+              <Link key={to} onClick={closeMenu} className="rounded-xl p-3 font-bold hover:bg-soft" to={to}>{t(label)}</Link>
             ))}
             {user ? (
               <>
-                <Link onClick={closeMenu} className="rounded-xl p-3 font-bold hover:bg-soft" to={dashboardPath}>Open workspace</Link>
-                <button className="btn-primary" onClick={signOut}>Logout</button>
+                <Link onClick={closeMenu} className="rounded-xl p-3 font-bold hover:bg-soft" to={dashboardPath}>{t("openWorkspace")}</Link>
+                <button className="btn-primary" onClick={signOut}>{t("logout")}</button>
               </>
             ) : (
               <>
                 <Link onClick={closeMenu} className="rounded-xl p-3 font-bold hover:bg-soft" to="/login">Login</Link>
-                <Link onClick={closeMenu} className="btn-primary" to="/register">Get Started</Link>
+                <Link onClick={closeMenu} className="btn-primary" to="/register">{t("getStartedNav")}</Link>
               </>
             )}
+            <div className="border-t border-slate-100 pt-3"><LanguageSwitcher /></div>
           </div>
         </div>
       )}

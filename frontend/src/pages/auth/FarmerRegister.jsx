@@ -2,6 +2,8 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { apiRequest } from "../../lib/api";
+import { useLanguage } from "../../context/LanguageContext";
+import LanguageSwitcher from "../../components/auth/LanguageSwitcher";
 
 export default function FarmerRegister() {
   const {
@@ -12,6 +14,7 @@ export default function FarmerRegister() {
   } = useForm();
 
   const nav = useNavigate();
+  const { t } = useLanguage();
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -95,18 +98,21 @@ export default function FarmerRegister() {
     <section className="bg-soft py-14">
       <div className="container-page max-w-4xl">
         <div className="card">
-          <div className="mb-8 text-center">
+          <div className="mb-8">
+            <div className="mb-6 flex justify-end"><LanguageSwitcher /></div>
+            <div className="text-center">
             <p className="text-sm font-semibold uppercase tracking-wider text-primary">
-              Farmer Onboarding
+              {t("farmerOnboarding")}
             </p>
 
             <h1 className="mt-2 text-3xl font-bold text-gray-900">
-              Register as Farmer
+              {t("registerFarmer")}
             </h1>
 
             <p className="mt-2 text-gray-600">
-              Create your farmer account and connect with verified buyers.
+              {t("farmerDescription")}
             </p>
+            </div>
           </div>
 
           {/* Step Indicator */}
@@ -118,9 +124,9 @@ export default function FarmerRegister() {
                   : "border-gray-200 bg-gray-50"
               }`}
             >
-              <p className="text-sm font-medium text-gray-500">Step 1</p>
+              <p className="text-sm font-medium text-gray-500">{t("step")} 1</p>
               <p className="font-semibold text-gray-900">
-                Personal Details
+                {t("personalDetails")}
               </p>
             </div>
 
@@ -131,9 +137,9 @@ export default function FarmerRegister() {
                   : "border-gray-200 bg-gray-50"
               }`}
             >
-              <p className="text-sm font-medium text-gray-500">Step 2</p>
+              <p className="text-sm font-medium text-gray-500">{t("step")} 2</p>
               <p className="font-semibold text-gray-900">
-                Farm Details
+                {t("farmDetails")}
               </p>
             </div>
           </div>
@@ -149,21 +155,21 @@ export default function FarmerRegister() {
             {step === 1 && (
               <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
                 <h2 className="mb-6 text-xl font-semibold text-gray-900">
-                  Account Details
+                  {t("accountDetails")}
                 </h2>
 
                 <div className="grid gap-5 md:grid-cols-2">
                   {/* First Name */}
                   <div>
                     <label className="mb-2 block text-sm font-medium text-gray-700">
-                      First Name
+                      {t("firstName")}
                     </label>
 
                     <input
                       type="text"
-                      placeholder="Enter first name"
+                      placeholder={t("enterFirstName")}
                       {...register("first_name", {
-                        required: "First name is required",
+                        required: `${t("firstName")} is required`,
                       })}
                       className="input"
                     />
@@ -178,14 +184,14 @@ export default function FarmerRegister() {
                   {/* Last Name */}
                   <div>
                     <label className="mb-2 block text-sm font-medium text-gray-700">
-                      Last Name
+                      {t("lastName")}
                     </label>
 
                     <input
                       type="text"
-                      placeholder="Enter last name"
+                      placeholder={t("enterLastName")}
                       {...register("last_name", {
-                        required: "Last name is required",
+                        required: `${t("lastName")} is required`,
                       })}
                       className="input"
                     />
@@ -200,14 +206,14 @@ export default function FarmerRegister() {
                   {/* Email */}
                   <div>
                     <label className="mb-2 block text-sm font-medium text-gray-700">
-                      Email Address
+                      {t("emailAddress")}
                     </label>
 
                     <input
                       type="email"
-                      placeholder="Enter email address"
+                      placeholder={t("enterEmail")}
                       {...register("email", {
-                        required: "Email is required",
+                        required: `${t("email")} is required`,
                       })}
                       className="input"
                     />
@@ -222,17 +228,17 @@ export default function FarmerRegister() {
                   {/* Phone */}
                   <div>
                     <label className="mb-2 block text-sm font-medium text-gray-700">
-                      Phone Number
+                      {t("phoneNumber")}
                     </label>
 
                     <input
                       type="tel"
-                      placeholder="Enter 10-digit phone number"
+                      placeholder={t("enterPhone")}
                       {...register("phone", {
-                        required: "Phone number is required",
+                        required: `${t("phoneNumber")} is required`,
                         pattern: {
                           value: /^[6-9]\d{9}$/,
-                          message: "Enter a valid 10-digit phone number",
+                          message: t("enterPhone"),
                         },
                       })}
                       className="input"
@@ -248,18 +254,18 @@ export default function FarmerRegister() {
                   {/* Password */}
                   <div className="md:col-span-2">
                     <label className="mb-2 block text-sm font-medium text-gray-700">
-                      Password
+                      {t("password")}
                     </label>
 
                     <input
                       type="password"
-                      placeholder="Create a strong password"
+                      placeholder={t("createPassword")}
                       {...register("password", {
-                        required: "Password is required",
+                        required: `${t("password")} is required`,
                         minLength: {
                           value: 8,
                           message:
-                            "Password must be at least 8 characters",
+                            `${t("password")} must be at least 8 characters`,
                         },
                       })}
                       className="input"
@@ -279,7 +285,7 @@ export default function FarmerRegister() {
                     onClick={nextStep}
                     className="btn-primary"
                   >
-                    Next
+                    {t("next")}
                   </button>
                 </div>
               </div>
@@ -291,21 +297,21 @@ export default function FarmerRegister() {
                 {/* Farm Details */}
                 <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
                   <h2 className="mb-6 text-xl font-semibold text-gray-900">
-                    Farm Details
+                    {t("farmDetails")}
                   </h2>
 
                   <div className="grid gap-5 md:grid-cols-2">
                     {/* Farm Name */}
                     <div>
                       <label className="mb-2 block text-sm font-medium text-gray-700">
-                        Farm / FPO Name
+                        {t("farmFpoName")}
                       </label>
 
                       <input
                         type="text"
-                        placeholder="Enter farm or FPO name"
+                        placeholder={t("enterFarmName")}
                         {...register("farm_name", {
-                          required: "Farm name is required",
+                          required: `${t("farmFpoName")} is required`,
                         })}
                         className="input"
                       />
@@ -320,15 +326,15 @@ export default function FarmerRegister() {
                     {/* Land Size */}
                     <div>
                       <label className="mb-2 block text-sm font-medium text-gray-700">
-                        Land Size (Acres)
+                        {t("landSize")}
                       </label>
 
                       <input
                         type="number"
                         step="0.01"
-                        placeholder="Enter land size"
+                        placeholder={t("enterLandSize")}
                         {...register("land_size_acres", {
-                          required: "Land size is required",
+                          required: `${t("landSize")} is required`,
                         })}
                         className="input"
                       />
@@ -343,14 +349,14 @@ export default function FarmerRegister() {
                     {/* Address */}
                     <div className="md:col-span-2">
                       <label className="mb-2 block text-sm font-medium text-gray-700">
-                        Farm Address
+                        {t("farmAddress")}
                       </label>
 
                       <textarea
                         rows="3"
-                        placeholder="Enter complete farm address"
+                        placeholder={t("enterFarmAddress")}
                         {...register("address", {
-                          required: "Address is required",
+                          required: `${t("farmAddress")} is required`,
                         })}
                         className="input"
                       />
@@ -365,14 +371,14 @@ export default function FarmerRegister() {
                     {/* District */}
                     <div>
                       <label className="mb-2 block text-sm font-medium text-gray-700">
-                        District
+                        {t("district")}
                       </label>
 
                       <input
                         type="text"
-                        placeholder="Enter district"
+                        placeholder={t("enterDistrict")}
                         {...register("district", {
-                          required: "District is required",
+                          required: `${t("district")} is required`,
                         })}
                         className="input"
                       />
@@ -387,14 +393,14 @@ export default function FarmerRegister() {
                     {/* State */}
                     <div>
                       <label className="mb-2 block text-sm font-medium text-gray-700">
-                        State
+                        {t("state")}
                       </label>
 
                       <input
                         type="text"
-                        placeholder="Enter state"
+                        placeholder={t("enterState")}
                         {...register("state", {
-                          required: "State is required",
+                          required: `${t("state")} is required`,
                         })}
                         className="input"
                       />
@@ -409,14 +415,14 @@ export default function FarmerRegister() {
                     {/* Khasra */}
                     <div className="md:col-span-2">
                       <label className="mb-2 block text-sm font-medium text-gray-700">
-                        Khasra Number of Land
+                        {t("khasra")}
                       </label>
 
                       <input
                         type="text"
-                        placeholder="Enter khasra number"
+                        placeholder={t("enterKhasra")}
                         {...register("khasra_number", {
-                          required: "Khasra number is required",
+                          required: `${t("khasra")} is required`,
                         })}
                         className="input"
                       />
@@ -433,21 +439,21 @@ export default function FarmerRegister() {
                 {/* Identity & Bank */}
                 <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
                   <h2 className="mb-6 text-xl font-semibold text-gray-900">
-                    Identity & Bank Details
+                    {t("identityBank")}
                   </h2>
 
                   <div className="grid gap-5 md:grid-cols-2">
                     {/* Aadhaar */}
                     <div>
                       <label className="mb-2 block text-sm font-medium text-gray-700">
-                        Aadhaar Number
+                        {t("aadhaar")}
                       </label>
 
                       <input
                         type="text"
-                        placeholder="Enter Aadhaar number"
+                        placeholder={t("enterAadhaar")}
                         {...register("aadhar_number", {
-                          required: "Aadhaar number is required",
+                          required: `${t("aadhaar")} is required`,
                         })}
                         className="input"
                       />
@@ -462,12 +468,12 @@ export default function FarmerRegister() {
                     {/* PAN */}
                     <div>
                       <label className="mb-2 block text-sm font-medium text-gray-700">
-                        PAN Number
+                        {t("pan")}
                       </label>
 
                       <input
                         type="text"
-                        placeholder="Enter PAN number"
+                        placeholder={t("enterPan")}
                         {...register("pan_number")}
                         className="input"
                       />
@@ -476,14 +482,14 @@ export default function FarmerRegister() {
                     {/* Bank Account */}
                     <div>
                       <label className="mb-2 block text-sm font-medium text-gray-700">
-                        Bank Account Number
+                        {t("bankAccount")}
                       </label>
 
                       <input
                         type="text"
-                        placeholder="Enter bank account number"
+                        placeholder={t("enterBankAccount")}
                         {...register("bank_account_number", {
-                          required: "Bank account number is required",
+                          required: `${t("bankAccount")} is required`,
                         })}
                         className="input"
                       />
@@ -498,14 +504,14 @@ export default function FarmerRegister() {
                     {/* IFSC */}
                     <div>
                       <label className="mb-2 block text-sm font-medium text-gray-700">
-                        IFSC Code
+                        {t("ifsc")}
                       </label>
 
                       <input
                         type="text"
-                        placeholder="Enter IFSC code"
+                        placeholder={t("enterIfsc")}
                         {...register("ifsc_code", {
-                          required: "IFSC code is required",
+                          required: `${t("ifsc")} is required`,
                         })}
                         className="input"
                       />
@@ -520,14 +526,14 @@ export default function FarmerRegister() {
                     {/* Bank Name */}
                     <div>
                       <label className="mb-2 block text-sm font-medium text-gray-700">
-                        Bank Name
+                        {t("bankName")}
                       </label>
 
                       <input
                         type="text"
-                        placeholder="Enter bank name"
+                        placeholder={t("enterBankName")}
                         {...register("bank_name", {
-                          required: "Bank name is required",
+                          required: `${t("bankName")} is required`,
                         })}
                         className="input"
                       />
@@ -542,14 +548,14 @@ export default function FarmerRegister() {
                     {/* Branch */}
                     <div>
                       <label className="mb-2 block text-sm font-medium text-gray-700">
-                        Branch Name
+                        {t("branchName")}
                       </label>
 
                       <input
                         type="text"
-                        placeholder="Enter branch name"
+                        placeholder={t("enterBranch")}
                         {...register("branch_name", {
-                          required: "Branch name is required",
+                          required: `${t("branchName")} is required`,
                         })}
                         className="input"
                       />
@@ -566,11 +572,11 @@ export default function FarmerRegister() {
                 {/* Documents */}
                 <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
                   <h2 className="mb-2 text-xl font-semibold text-gray-900">
-                    Verification Documents
+                    {t("verificationDocuments")}
                   </h2>
 
                   <p className="mb-5 text-sm text-gray-500">
-                    Upload relevant land, identity, or farming documents.
+                    {t("uploadDocuments")}
                   </p>
 
                   <input
@@ -589,7 +595,7 @@ export default function FarmerRegister() {
                     onClick={previousStep}
                     className="btn-secondary"
                   >
-                    Previous
+                    {t("previous")}
                   </button>
 
                   <button
@@ -597,7 +603,7 @@ export default function FarmerRegister() {
                     disabled={loading}
                     className="btn-primary"
                   >
-                    {loading ?  "Submit for Verification":"Sending...."}
+                    {loading ? t("submitVerification") : t("sending")}
                   </button>
                 </div>
               </div>

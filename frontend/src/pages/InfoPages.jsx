@@ -19,22 +19,22 @@ import {
   Wallet,
 } from "lucide-react";
 import PageHero from "../components/ui/PageHero";
-
-// Stand-in photography (Lorem Picsum, free to use while prototyping) — swap the
-// `img.*` URLs below for licensed AgriContract photography before shipping.
+import { useLanguage } from "../context/LanguageContext";
+import aboutimg  from "../assets/image copy.png";
+import featuresimg from "../assets/image copy 2.png";
 const img = {
-  about: "https://picsum.photos/seed/agrisure-about/800/1000",
-  features: "https://picsum.photos/seed/agrisure-features/800/1000",
-  spotlight: "https://picsum.photos/seed/agrisure-spotlight/900/700",
-  services: "https://picsum.photos/seed/agrisure-services/800/1000",
-  how: "https://picsum.photos/seed/agrisure-how/800/1000",
-  contact: "https://picsum.photos/seed/agrisure-contact/900/560",
+  about: aboutimg,
+  features: featuresimg,
+  spotlight: "https://images.unsplash.com/photo-1523742810807-98ba3f3f8a1c?auto=format&fit=crop&w=1200&q=85",
+  services: "https://images.unsplash.com/photo-1530507629858-e4977d30e9e0?auto=format&fit=crop&w=1000&q=85",
+  how: "https://images.unsplash.com/photo-1500076656116-558758c991c1?auto=format&fit=crop&w=1000&q=85",
+  contact: "https://images.unsplash.com/photo-1500076656116-558758c991c1?auto=format&fit=crop&w=1200&q=85",
 };
 
 const HERO = {
   about: {
     eyebrow: "About AgriContract",
-    title: "A structured digital layer for contract farming",
+    title: "A better contract for every harvest",
     description:
       "AgriContract connects farmers, FPOs and buyers through verified onboarding, transparent agreements and traceable execution.",
     image: img.about,
@@ -45,7 +45,7 @@ const HERO = {
   },
   features: {
     eyebrow: "Features",
-    title: "Everything around the contract lifecycle",
+    title: "Clarity at every stage of the growing season",
     description:
       "Onboarding, contracts, negotiation, milestones, payments, monitoring, disputes and analytics are designed as one connected workflow.",
     image: img.features,
@@ -56,7 +56,7 @@ const HERO = {
   },
   services: {
     eyebrow: "Services",
-    title: "Tools for farmers, buyers and platform operations",
+    title: "One platform for the whole agricultural network",
     description: "Give each role the tools it needs while keeping shared contract records consistent.",
     image: img.services,
     badges: [
@@ -66,7 +66,7 @@ const HERO = {
   },
   how: {
     eyebrow: "How It Works",
-    title: "A traceable journey from registration to settlement",
+    title: "From seed plan to settled payment",
     description:
       "Verify participants, agree terms, sign the contract, monitor milestones and release funds against verified outcomes.",
     image: img.how,
@@ -82,6 +82,10 @@ const HERO = {
   },
 };
 
+function getHero(type, t) {
+  return { ...HERO[type], title: t(`${type}Hero`) };
+}
+
 export default function InfoPage({ type }) {
   if (type === "contact") return <ContactPage />;
   if (type === "how") return <HowItWorksPage />;
@@ -94,6 +98,7 @@ export default function InfoPage({ type }) {
 // About
 // ===================================================================
 function AboutPage() {
+  const { t } = useLanguage();
   const values = [
     { icon: ShieldCheck, title: "Trust and transparency", desc: "Every participant is verified and every term is recorded before work begins." },
     { icon: Handshake, title: "Assured market access", desc: "Farmers agree terms with verified buyers instead of relying on uncertain spot sales." },
@@ -105,7 +110,7 @@ function AboutPage() {
 
   return (
     <>
-      <PageHero {...HERO.about} />
+      <PageHero {...getHero("about", t)} />
 
       <section className="section-padding">
         <div className="container-page max-w-3xl text-center">
@@ -147,6 +152,7 @@ function AboutPage() {
 // Features
 // ===================================================================
 function FeaturesPage() {
+  const { t } = useLanguage();
   const features = [
     { icon: Users, title: "Multi-role onboarding", desc: "Separate, guided sign-up flows for farmers, companies and admins." },
     { icon: ShieldCheck, title: "Document verification", desc: "Identity and business documents reviewed before an account goes live." },
@@ -161,7 +167,7 @@ function FeaturesPage() {
 
   return (
     <>
-      <PageHero {...HERO.features} />
+      <PageHero {...getHero("features", t)} />
 
       <section className="section-padding">
         <div className="container-page">
@@ -214,6 +220,7 @@ function FeaturesPage() {
 // Services
 // ===================================================================
 function ServicesPage() {
+  const { t } = useLanguage();
   const groups = [
     {
       title: "For farmers",
@@ -234,7 +241,7 @@ function ServicesPage() {
 
   return (
     <>
-      <PageHero {...HERO.services} />
+      <PageHero {...getHero("services", t)} />
 
       <section className="section-padding">
         <div className="container-page">
@@ -270,6 +277,7 @@ function ServicesPage() {
 // How it works
 // ===================================================================
 function HowItWorksPage() {
+  const { t } = useLanguage();
   const steps = [
     { icon: Users, title: "Register and verify", desc: "Farmers and buyers sign up and submit documents for review." },
     { icon: FileCheck2, title: "Create contract terms", desc: "Price, quantity, grade and delivery terms are drafted for the agreement." },
@@ -283,7 +291,7 @@ function HowItWorksPage() {
 
   return (
     <>
-      <PageHero {...HERO.how} />
+      <PageHero {...getHero("how", t)} />
 
       <section className="section-padding">
         <div className="container-page max-w-3xl">
@@ -318,6 +326,7 @@ function HowItWorksPage() {
 // Contact
 // ===================================================================
 function ContactPage() {
+  const { t } = useLanguage();
   const support = [
     { icon: Users, label: "Farmer onboarding" },
     { icon: ShieldCheck, label: "Buyer verification" },
@@ -329,10 +338,10 @@ function ContactPage() {
 
   return (
     <>
-      <PageHero {...HERO.contact} />
+      <PageHero {...getHero("contact", t)} />
 
       <section className="section-padding">
-        <div className="container-page grid gap-8 lg:grid-cols-2 lg:gap-10">
+        <div className="container-page grid gap-8 lg:grid-cols-2 lg:gap-10 ">
           <div className="card">
             <h2 className="font-heading text-2xl font-extrabold text-navy">Send an enquiry</h2>
             <p className="mt-2 text-sm text-slate-500">We usually reply within one business day.</p>

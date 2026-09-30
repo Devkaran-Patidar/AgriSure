@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useState } from "react";
 import { getDashboardPathByRole } from "../../lib/routeSecurity";
+import { useLanguage } from "../../context/LanguageContext";
+import LanguageSwitcher from "../../components/auth/LanguageSwitcher";
 
 export default function Login() {
   const {
@@ -13,6 +15,7 @@ export default function Login() {
 
   const { login } = useAuth();
   const nav = useNavigate();
+  const { t } = useLanguage();
 
   const [error, setError] = useState("");
 
@@ -30,11 +33,13 @@ export default function Login() {
     <section className="min-h-[calc(100vh-144px)] bg-soft py-16">
       <div className="container-page max-w-md">
         <div className="card">
-          {/* Header */}
-          <span className="eyebrow">Secure Login</span>
+          <div className="flex items-center justify-between gap-4">
+            <span className="eyebrow">{t("secureLogin")}</span>
+            <LanguageSwitcher />
+          </div>
 
           <h1 className="mt-5 font-heading text-3xl font-extrabold text-navy">
-            Welcome back
+            {t("welcomeBack")}
           </h1>
 
           {/* Error Message */}
@@ -51,12 +56,12 @@ export default function Login() {
           >
             {/* Email */}
             <label>
-              <span className="label">Email</span>
+                <span className="label">{t("email")}</span>
 
               <input
                 type="email"
                 className="input"
-                placeholder="Enter your email"
+                placeholder={t("emailPlaceholder")}
                 {...register("email", {
                   required: "Email is required",
                 })}
@@ -71,7 +76,7 @@ export default function Login() {
 
             {/* Password */}
             <label>
-              <span className="label">Password</span>
+                <span className="label">{t("password")}</span>
 
               <input
                 type="password"
@@ -94,18 +99,18 @@ export default function Login() {
               type="submit"
               className="btn-primary"
             >
-              Login
+              {t("login")}
             </button>
           </form>
 
           {/* Register Link */}
           <p className="mt-6 text-sm text-slate-500">
-            New here?{" "}
+            {t("newHere")} {" "}
             <Link
               className="font-bold text-primary"
               to="/register"
             >
-              Create an account
+              {t("createAccount")}
             </Link>
           </p>
         </div>
