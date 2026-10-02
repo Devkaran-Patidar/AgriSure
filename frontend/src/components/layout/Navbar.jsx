@@ -30,6 +30,13 @@ export default function Navbar() {
         : t("secureFarming");
   const closeMenu = () => { setOpen(false); setRegisterOpen(false); };
   const signOut = () => { logout(); closeMenu(); navigate("/"); };
+  const toggleNavigation = () => {
+    if (user) {
+      window.dispatchEvent(new CustomEvent("workspace:open"));
+      return;
+    }
+    setOpen((value) => !value);
+  };
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-100 bg-white/95 backdrop-blur">
@@ -44,7 +51,7 @@ export default function Navbar() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-6 lg:flex">
+        <nav className="hidden items-center gap-6 xl:flex">
           {!user && publicLinks.map(([to, label]) => (
             <NavLink
               key={to}
@@ -83,18 +90,22 @@ export default function Navbar() {
           <LanguageSwitcher />
         </nav>
 
-        <button
-          className="rounded-xl p-2 text-slate-600 hover:bg-soft hover:text-primary lg:hidden"
-          aria-label={open ? "Close navigation" : "Open navigation"}
-          aria-expanded={open}
-          onClick={() => setOpen(!open)}
-        >
-          {open ? <X /> : <Menu />}
-        </button>
+        <div className="flex items-center gap-1 xl:hidden">
+          <button
+            type="button"
+            className="mobile-nav-icon"
+            aria-label={user ? "Open workspace navigation" : (open ? "Close navigation" : "Open navigation")}
+            aria-expanded={open}
+            onClick={toggleNavigation}
+            title={user ? "Open workspace navigation" : (open ? "Close navigation" : "Open navigation")}
+          >
+            {open ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
       </div>
 
-      {open && (
-        <div className="border-t border-slate-100 bg-white p-4 lg:hidden">
+      {open && !user && (
+        <div className="border-t border-slate-100 bg-white p-4 xl:hidden">
           <div className="container-page grid gap-2">
             {!user && publicLinks.map(([to, label]) => (
               <Link key={to} onClick={closeMenu} className="rounded-xl p-3 font-bold hover:bg-soft" to={to}>{t(label)}</Link>

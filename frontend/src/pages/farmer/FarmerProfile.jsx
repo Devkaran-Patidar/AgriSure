@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { apiRequest } from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
 import StatusBadge from "../../components/common/StatusBadge";
-
+import { SquarePen } from "lucide-react";
 export default function FarmerProfile() {
   const [profile, setProfile] = useState(null);
   const [form, setForm] = useState(null);
@@ -178,29 +178,21 @@ export default function FarmerProfile() {
       <div className="container-page max-w-5xl">
 
         <span className="eyebrow">
-          Farmer workspace
+          Farmer Profile
         </span>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="section-title">
-              Your Profile
+              {/* Your Profile */}
             </h1>
 
-            <p className="section-description">
+            <h6 className="section-description text-2xl font-bold font-heading text-black-400">
               View and manage your personal and farm information.
-            </p>
+            </h6>
           </div>
 
-          {!editing && (
-            <button
-              type="button"
-              onClick={startEditing}
-              className="btn-primary"
-            >
-              Edit Profile
-            </button>
-          )}
+          
         </div>
 
         {error && (
@@ -384,9 +376,19 @@ function ProfileCard({ profile, farmer }) {
         <DocumentList
           documents={farmer.verification_documents}
         />
-
+      <div className="mt-6 flex justify-end gap-3">
+        {!editing && (
+            <button
+              type="button"
+              onClick={startEditing}
+              className="btn-primary"
+            >
+              
+            <SquarePen strokeWidth={1.5} /> Edit Profile
+            </button>
+          )}
       </div>
-
+      </div>
     </div>
   );
 }

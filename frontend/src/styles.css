@@ -69,10 +69,15 @@ button { cursor:pointer; }
 .workspace-nav-link:hover { background:#F5F8F6; color:#1E7D32; }
 .workspace-nav-link.active { background:#EAF4ED; color:#1E7D32; }
 .workspace-nav-label { overflow:hidden; text-overflow:ellipsis; }
+.workspace-sidebar-footer { display:grid; gap:10px; flex-shrink:0; margin-top:auto; padding:18px 6px 0; border-top:1px solid #EEF2F0; }
+.workspace-logout { display:flex; align-items:center; gap:10px; width:100%; border-radius:14px; padding:11px 12px; color:#B42318; font-size:.86rem; font-weight:800; text-align:left; }
+.workspace-logout:hover { background:#FDECEC; }
 .workspace-content { flex:1; min-width:0; }
 .workspace-mobile-bar { display:none; }
 .workspace-backdrop { display:none; }
 .workspace-mobile-close { display:none; }
+.mobile-nav-icon { display:grid; place-items:center; flex-shrink:0; width:36px; height:36px; border-radius:10px; color:#64748B; transition:background .2s,color .2s; }
+.mobile-nav-icon:hover { background:#F5F8F6; color:#1E7D32; }
 
 /* ----- Folded (icon-only) rail ----- */
 .workspace-sidebar.is-collapsed { width:76px; padding-inline:10px; }
@@ -80,6 +85,8 @@ button { cursor:pointer; }
 .workspace-sidebar.is-collapsed .workspace-nav-label { display:none; }
 .workspace-sidebar.is-collapsed .workspace-sidebar-head { justify-content:center; }
 .workspace-sidebar.is-collapsed .workspace-nav-link { justify-content:center; padding-inline:0; }
+.workspace-sidebar.is-collapsed .workspace-sidebar-footer { justify-items:center; padding-inline:0; }
+.workspace-sidebar.is-collapsed .workspace-logout { justify-content:center; padding-inline:0; }
 .workspace-sidebar.is-collapsed .workspace-fold-btn svg { transform:rotate(180deg); }
 .page-shell { padding:32px 28px 48px; }
 .page-shell .container-page { width:100%; max-width:1120px; margin:0 auto; }
@@ -97,9 +104,7 @@ button { cursor:pointer; }
 .profile-grid { display:grid; gap:24px; grid-template-columns:280px minmax(0,1fr); }
 .profile-summary { border:1px solid #E2E8F0; border-radius:24px; background:#fff; padding:24px; box-shadow:0 8px 24px rgba(15,23,42,.04); }
 .payment-card-title { font-family:"Poppins",sans-serif; font-size:1.05rem; font-weight:800; line-height:1.35; color:#0F172A; }
-@media(max-width:1023px){
-  .workspace-mobile-bar { display:flex; align-items:center; gap:10px; position:sticky; top:64px; z-index:30; padding:12px 16px; background:#fff; border-bottom:1px solid #E2E8F0; }
-  .workspace-mobile-bar span { font-family:"Poppins",sans-serif; font-size:.92rem; font-weight:800; color:#0F172A; }
+@media(max-width:1279px){
   .workspace-sidebar {
     position:fixed; top:64px; left:0; height:calc(100vh - 64px); width:280px;
     transform:translateX(-104%); box-shadow:0 20px 45px rgba(15,23,42,.18);
@@ -116,7 +121,10 @@ button { cursor:pointer; }
   .workspace-fold-btn.desktop-only { display:none; }
   .profile-grid { grid-template-columns:1fr; }
 }
-@media(min-width:1024px){ .workspace-mobile-bar,.workspace-backdrop,.workspace-mobile-close{ display:none !important; } }
+@media(min-width:1280px){
+  .workspace-mobile-bar,.workspace-backdrop,.workspace-mobile-close{ display:none !important; }
+  .workspace-sidebar-footer{ display:none; }
+}
 @media(max-width:767px){ .container-page{width:min(100% - 28px,1180px)} .section-padding{padding-block:64px} .page-shell{padding:24px 16px 40px} .workspace-sidebar{width:260px} }
 
 /* ===== Admin panel additions ===== */

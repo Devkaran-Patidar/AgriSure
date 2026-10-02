@@ -11,8 +11,8 @@ import {
   Handshake,
   LayoutDashboard,
   Leaf,
+  LogOut,
   MessageSquare,
-  Menu,
   Search,
   ShieldCheck,
   Sprout,
@@ -20,6 +20,8 @@ import {
   Wallet,
   X,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import LanguageSwitcher from "../auth/LanguageSwitcher";
 
 const NAV = {
   FARMER: [
@@ -63,14 +65,20 @@ const LABELS = {
 const COLLAPSE_KEY = "workspace_sidebar_collapsed";
 
 export default function WorkspaceLayout({ role }) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const { pathname } = useLocation();
   const items = NAV[role] || [];
+  const signOut = () => {
+    logout();
+    setMobileOpen(false);
+    navigate("/");
+  };
 
   // Desktop fold/unfold: persisted so the choice sticks across page loads.
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem(COLLAPSE_KEY) === "1");
-  // Mobile off-canvas drawer: closed by default, opened with the hamburger button.
+  // Off-canvas drawer: closed by default, opened from the global navbar.
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
@@ -81,24 +89,17 @@ export default function WorkspaceLayout({ role }) {
   // from scrolling behind it while it's open.
   useEffect(() => setMobileOpen(false), [pathname]);
   useEffect(() => {
+    const openFromNavbar = () => setMobileOpen(true);
+    window.addEventListener("workspace:open", openFromNavbar);
+    return () => window.removeEventListener("workspace:open", openFromNavbar);
+  }, []);
+  useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [mobileOpen]);
 
   return (
     <div className={`workspace-shell${mobileOpen ? " mobile-open" : ""}`}>
-      <div className="workspace-mobile-bar">
-        <button
-          type="button"
-          className="workspace-fold-btn"
-          onClick={() => setMobileOpen(true)}
-          aria-label="Open navigation"
-        >
-          <Menu size={16} />
-        </button>
-        <span>{t(LABELS[role])}</span>
-      </div>
-
       <div className="workspace-backdrop" onClick={() => setMobileOpen(false)} />
 
       <aside className={`workspace-sidebar${collapsed ? " is-collapsed" : ""}`}>
@@ -140,6 +141,16 @@ export default function WorkspaceLayout({ role }) {
             </NavLink>
           ))}
         </nav>
+
+        <div className="workspace-sidebar-footer">
+          <span title={t("language")}>
+            <LanguageSwitcher compact={collapsed} />
+          </span>
+          <button type="button" className="workspace-logout" onClick={signOut} title={t("logout")}>
+            <LogOut size={18} />
+            <span className="workspace-nav-label">{t("logout")}</span>
+          </button>
+        </div>
       </aside>
 
       <div className="workspace-content">
