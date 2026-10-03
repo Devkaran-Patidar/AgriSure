@@ -299,7 +299,7 @@ export default function FarmerCropProgress() {
                 </label>
 
                 <textarea
-                  className="input min-h-[100px] resize-none"
+                  className="input min-h-100px resize-none"
                   name="notes"
                   value={form.notes}
                   onChange={handleChange}

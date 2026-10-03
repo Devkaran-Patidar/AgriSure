@@ -156,7 +156,7 @@ export default function AdminDashboard() {
           </ChartCard>
 
           <ChartCard title="Verification rate">
-            <div className="flex h-[260px] flex-col items-center justify-center">
+            <div className="flex h-260px flex-col items-center justify-center">
               <ResponsiveContainer width="100%" height={180}>
                 <PieChart>
                   <Pie

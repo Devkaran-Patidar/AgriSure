@@ -488,7 +488,7 @@ export default function FarmerCrops() {
                 </span>
 
                 <textarea
-                  className="input min-h-[110px]"
+                  className="input min-h-110px"
                   name="description"
                   placeholder="Mention any important information about your crop, quality, cultivation or contract requirements..."
                   value={form.description}
