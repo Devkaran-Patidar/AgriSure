@@ -15,16 +15,26 @@ export default function CompanyContracts() {
   }, []);
 
   const requestContracts = contracts.filter((contract) => contract.status === "DRAFT");
-  const negotiationContracts = contracts.filter((contract) => ["NEGOTIATING", "AGREED"].includes(contract.status));
+  const negotiationContracts = contracts.filter((contract) => contract.status === "NEGOTIATING");
+  const agreedContracts = contracts.filter((contract) => contract.status === "AGREED");
   const runningContracts = contracts.filter((contract) => contract.status === "ACTIVE");
   const completedContracts = contracts.filter((contract) => contract.status === "COMPLETED");
+
+  const deleteRequest = async (id) => {
+    try {
+      await apiRequest(`/contracts/${id}/`, { method: "DELETE" });
+      setContracts((current) => current.filter((contract) => contract.id !== id));
+    } catch (requestError) {
+      setError(requestError.message);
+    }
+  };
 
   return (
     <div className="page-shell">
       <div className="container-page">
         <span className="eyebrow">Agreements</span>
-        <h1 className="section-title">Your procurement agreements</h1>
-        <p className="section-description">Track sourcing agreements from request to signed delivery and final payment flow.</p>
+        {/* <h1 className="section-title">Your procurement agreements</h1> */}
+        <p className="section-description text-2xl">Track sourcing agreements from request to signed delivery and final payment flow.</p>
 
         {error && <div className="mt-4 rounded-xl bg-red-50 p-4 text-sm font-bold text-red-600">{error}</div>}
 
@@ -37,8 +47,9 @@ export default function CompanyContracts() {
           </div>
         ) : (
           <div className="mt-8 grid gap-10">
-            <RequestSection contracts={requestContracts} title="Incoming requests" />
+            <RequestSection contracts={requestContracts} title="Outgoing requests" onDelete={deleteRequest} />
             <NegotiationSection contracts={negotiationContracts} title="Negotiation and agreed price" />
+            <ContractSection title="Agreed and ready to sign" contracts={agreedContracts} role="company" empty="No agreements are waiting for signatures." />
             <ContractSection title="Running contracts" contracts={runningContracts} role="company" empty="No active procurements." />
             <ContractSection title="Completed after delivery" contracts={completedContracts} role="company" signed empty="No completed deliveries yet." />
           </div>
@@ -48,7 +59,7 @@ export default function CompanyContracts() {
   );
 }
 
-function RequestSection({ contracts, title }) {
+function RequestSection({ contracts, title, onDelete }) {
   return (
     <section>
       <h2 className="font-heading text-2xl font-extrabold text-navy">{title}</h2>
@@ -66,7 +77,10 @@ function RequestSection({ contracts, title }) {
                 <Info label="Price" value={contract.agreed_price ? `INR ${Number(contract.agreed_price).toLocaleString("en-IN")}` : "Pending negotiation"} />
               </div>
               <div className="mt-5">
-                <a className="btn-secondary" href={`/company/contracts/${contract.id}`}>Review request</a>
+                <div className="flex flex-wrap gap-3">
+                  <a className="btn-secondary" href={`/company/contracts/${contract.id}`}>Review request</a>
+                  <button className="btn-secondary" onClick={() => onDelete(contract.id)}>Delete request</button>
+                </div>
               </div>
             </article>
           ))}

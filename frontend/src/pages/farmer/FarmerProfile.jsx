@@ -211,6 +211,7 @@ export default function FarmerProfile() {
           <ProfileCard
             profile={profile}
             farmer={farmer}
+            onEdit={startEditing}
           />
         ) : (
           <EditProfile
@@ -236,7 +237,7 @@ export default function FarmerProfile() {
    PROFILE CARD
 ========================= */
 
-function ProfileCard({ profile, farmer }) {
+function ProfileCard({ profile, farmer, onEdit }) {
   return (
     <div className="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
 
@@ -377,16 +378,13 @@ function ProfileCard({ profile, farmer }) {
           documents={farmer.verification_documents}
         />
       <div className="mt-6 flex justify-end gap-3">
-        {!editing && (
-            <button
-              type="button"
-              onClick={startEditing}
-              className="btn-primary"
-            >
-              
-            <SquarePen strokeWidth={1.5} /> Edit Profile
-            </button>
-          )}
+        <button
+          type="button"
+          onClick={onEdit}
+          className="btn-primary"
+        >
+          <SquarePen strokeWidth={1.5} /> Edit Profile
+        </button>
       </div>
       </div>
     </div>

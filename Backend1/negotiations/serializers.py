@@ -19,9 +19,16 @@ class NegotiationOfferSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("You are not part of this contract.")
         if user.role == 'COMPANY' and contract.company != user.company_profile:
             raise serializers.ValidationError("You are not part of this contract.")
+        if contract.status != 'NEGOTIATING' or contract.is_fully_signed:
+            raise serializers.ValidationError("Negotiation is closed for this contract.")
 
         # Update contract status
         contract.status = 'NEGOTIATING'
         contract.save()
 
         return super().create(validated_data)
+
+    def validate_offered_price(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("Offered price must be greater than zero.")
+        return value

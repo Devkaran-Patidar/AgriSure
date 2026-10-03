@@ -4,6 +4,7 @@ import { useState } from "react";
 import { apiRequest } from "../../lib/api";
 import { useLanguage } from "../../context/LanguageContext";
 import LanguageSwitcher from "../../components/auth/LanguageSwitcher";
+import termsDocument from "../../assets/documents/AgriSure_Platform_Terms_and_Conditions.pdf";
 
 export default function FarmerRegister() {
   const {
@@ -587,6 +588,43 @@ export default function FarmerRegister() {
                     className="block w-full rounded-xl border border-gray-300 p-3 text-sm"
                   />
                 </div>
+                 {/* Terms */}
+            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                  <label htmlFor="farmer-terms" className="flex items-start gap-3">
+                <input
+                      id="farmer-terms"
+                  type="checkbox"
+                  {...register("terms", {
+                    required: "You must accept the terms and conditions",
+                        validate: (accepted) =>
+                          accepted || "You must accept the terms and conditions",
+                  })}
+                      required
+                  className="mt-1 h-4 w-4 rounded border-gray-300"
+                />
+
+                <span className="text-sm leading-6 text-gray-600">
+                  I agree to the{" "}
+                  <a
+                  target="_blank"
+                    rel="noopener noreferrer"
+                    href={termsDocument}
+                    className="font-medium text-primary hover:underline"
+                  >
+                    Terms & Conditions with Privacy Policy.
+                  </a>
+                
+                  
+                </span>
+              </label>
+
+              {errors.terms && (
+                <p className="mt-2 text-sm text-red-600">
+                  {errors.terms.message}
+                </p>
+              )}
+            </div>
+
 
                 {/* Navigation */}
                 <div className="flex items-center justify-between">
@@ -603,7 +641,7 @@ export default function FarmerRegister() {
                     disabled={loading}
                     className="btn-primary"
                   >
-                    {loading ? t("submitVerification") : t("sending")}
+                    {loading ? t("sending...."): t("submitVerification")}
                   </button>
                 </div>
               </div>

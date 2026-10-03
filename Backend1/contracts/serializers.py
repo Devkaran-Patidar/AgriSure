@@ -1,5 +1,7 @@
 from rest_framework import serializers
+from django.db import transaction
 from .models import Contract
+from farmer.models import Crop
 from farmer.serializers import CropSerializer
 from payments.serializers import MilestoneSerializer
 
@@ -31,18 +33,35 @@ class ContractSerializer(serializers.ModelSerializer):
         if user.role != 'COMPANY':
             raise serializers.ValidationError("Only companies can initiate a contract request.")
 
-        if Contract.objects.filter(
-            company=user.company_profile,
-            crop=validated_data['crop'],
-        ).exclude(status='CANCELLED').exists():
-            raise serializers.ValidationError("A request for this crop already exists.")
-            
-        validated_data['company'] = user.company_profile
-        validated_data['farmer'] = validated_data['crop'].farmer
-        validated_data['status'] = 'DRAFT'
-        contract = super().create(validated_data)
+        with transaction.atomic():
+            crop = Crop.objects.select_for_update().get(pk=validated_data['crop'].pk)
+            if Contract.objects.filter(crop=crop).exclude(status='CANCELLED').exists():
+                raise serializers.ValidationError("This crop is already reserved by an active request or agreement.")
+
+            validated_data['crop'] = crop
+            validated_data['company'] = user.company_profile
+            validated_data['farmer'] = crop.farmer
+            validated_data['status'] = 'DRAFT'
+            contract = super().create(validated_data)
         from communications.models import Notification
         Notification.objects.create(user=contract.farmer.user, title=f"New contract request #{contract.id}", message=f"{contract.company.company_name} sent a contract request for {contract.crop.name}.", notification_type="CONTRACT")
         from payments.views import get_or_create_account
         get_or_create_account(contract)
         return contract
+
+    def validate_agreed_quantity(self, value):
+        crop = self.initial_data.get('crop')
+        if crop is None:
+            return value
+        crop_obj = Crop.objects.filter(pk=crop).first()
+        if crop_obj is None:
+            return value
+        if value < crop_obj.minimum_contract_quantity:
+            raise serializers.ValidationError(
+                f"Quantity must be at least {crop_obj.minimum_contract_quantity} quintals."
+            )
+        if value > crop_obj.expected_quantity:
+            raise serializers.ValidationError(
+                f"Quantity cannot exceed {crop_obj.expected_quantity} quintals."
+            )
+        return value

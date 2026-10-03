@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.db import transaction
 from .models import NegotiationOffer
 from .serializers import NegotiationOfferSerializer
 from contracts.models import Contract
@@ -34,16 +35,22 @@ class NegotiationOfferViewSet(viewsets.ModelViewSet):
             return Response({"detail": "You cannot accept your own offer."}, status=status.HTTP_400_BAD_REQUEST)
 
         contract = offer.contract
-        if contract.status in ('ACTIVE', 'COMPLETED', 'CANCELLED'):
-            return Response({"detail": "This contract is already in a later lifecycle stage and cannot be renegotiated."}, status=status.HTTP_400_BAD_REQUEST)
+        if contract.status != 'NEGOTIATING' or contract.is_fully_signed:
+            return Response({"detail": "This contract is no longer open for negotiation."}, status=status.HTTP_400_BAD_REQUEST)
+        if not contract.farmer_approved_at or not contract.company_approved_at:
+            return Response({"detail": "Both parties must approve the request before an offer can be accepted."}, status=status.HTTP_400_BAD_REQUEST)
 
-        offer.status = 'ACCEPTED'
-        offer.save()
-
-        contract.agreed_price = offer.offered_price
-        contract.status = 'AGREED'
-        contract.save()
-        NegotiationOffer.objects.filter(contract=contract, status='PENDING').exclude(pk=offer.pk).update(status='REJECTED')
+        with transaction.atomic():
+            offer = NegotiationOffer.objects.select_for_update().select_related('contract').get(pk=offer.pk)
+            if offer.status != 'PENDING':
+                return Response({"detail": "This offer is no longer pending."}, status=status.HTTP_400_BAD_REQUEST)
+            offer.status = 'ACCEPTED'
+            offer.save(update_fields=['status'])
+            contract = offer.contract
+            contract.agreed_price = offer.offered_price
+            contract.status = 'AGREED'
+            contract.save(update_fields=['agreed_price', 'status', 'updated_at'])
+            NegotiationOffer.objects.filter(contract=contract, status='PENDING').exclude(pk=offer.pk).update(status='REJECTED')
         get_or_create_account(contract)
 
         Notification.objects.bulk_create([
@@ -52,3 +59,21 @@ class NegotiationOfferViewSet(viewsets.ModelViewSet):
         ])
 
         return Response({"detail": "Offer accepted."})
+
+    @action(detail=True, methods=['post'])
+    def reject(self, request, pk=None):
+        offer = self.get_object()
+        if offer.status != 'PENDING':
+            return Response({"detail": "Only a pending offer can be rejected."}, status=status.HTTP_400_BAD_REQUEST)
+        if offer.offered_by_id == request.user.id:
+            return Response({"detail": "You cannot reject your own offer."}, status=status.HTTP_400_BAD_REQUEST)
+        offer.status = 'REJECTED'
+        offer.save(update_fields=['status'])
+        return Response({"detail": "Offer rejected."})
+
+    def destroy(self, request, *args, **kwargs):
+        offer = self.get_object()
+        if offer.offered_by_id != request.user.id or offer.status != 'PENDING':
+            return Response({"detail": "Only your pending offer can be deleted."}, status=status.HTTP_403_FORBIDDEN)
+        offer.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

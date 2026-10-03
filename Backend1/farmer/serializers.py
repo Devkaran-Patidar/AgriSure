@@ -4,6 +4,8 @@ from .models import Crop
 
 class CropSerializer(serializers.ModelSerializer):
     request_status = serializers.SerializerMethodField()
+    state = serializers.CharField(source="farmer.state", read_only=True)
+    district = serializers.CharField(source="farmer.district", read_only=True)
 
     class Meta:
         model = Crop
@@ -25,6 +27,8 @@ class CropSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "request_status",
+            "state",
+            "district",
         ]
 
         read_only_fields = [

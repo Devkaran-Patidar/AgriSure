@@ -22,10 +22,22 @@ export default function ContractCard({ contract, role, signed }) {
         <Info label={partnerLabel} value={partnerValue} />
         <Info label="Quantity" value={contract.agreed_quantity} />
         <Info label="Price" value={contract.agreed_price ? formatCurrency(contract.agreed_price) : "Pending negotiation"} />
+        <Info label="Total payment" value={contract.total_amount ? formatCurrency(contract.total_amount) : "Pending negotiation"} />
+        <Info label="Created" value={formatDate(contract.created_at)} />
+        {contract.status === "COMPLETED" && <Info label="Delivered" value={formatDate(contract.delivery_at || contract.updated_at)} />}
       </div>
       {signed && <p className="mt-5 text-sm font-bold text-primary">View signed agreement · Save PDF</p>}
     </Link>
   );
+}
+
+function formatDate(value) {
+  if (!value) return "Pending";
+  return new Date(value).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 function Info({ label, value }) {

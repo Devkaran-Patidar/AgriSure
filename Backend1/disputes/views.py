@@ -16,10 +16,20 @@ class DisputeListCreateView(generics.ListCreateAPIView):
         return participant_disputes(self.request.user).order_by("-created_at")
     def perform_create(self, serializer):
         contract_id = self.request.data.get("contract")
-        allowed = Contract.objects.filter(id=contract_id).filter(farmer__user=self.request.user) | Contract.objects.filter(id=contract_id).filter(company__user=self.request.user)
-        if not allowed.exists():
+        contract = Contract.objects.filter(id=contract_id).filter(
+            farmer__user=self.request.user
+        ).first() or Contract.objects.filter(id=contract_id).filter(
+            company__user=self.request.user
+        ).first()
+        if not contract:
             from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied("You are not a participant in this contract.")
+        if contract.status in ("DRAFT", "CANCELLED"):
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError("Disputes are available only after an agreement is active.")
+        if Dispute.objects.filter(contract=contract, status__in=("OPEN", "UNDER_REVIEW")).exists():
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError("An open dispute already exists for this contract.")
         serializer.save(raised_by=self.request.user)
 
 class EvidenceListCreateView(generics.ListCreateAPIView):

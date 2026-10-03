@@ -25,3 +25,20 @@ class CommunicationsTests(TestCase):
         response = self.client.post("/api/communications/messages/", {"recipient": self.other.id, "subject": "Hello", "body": "Test message"}, format="json")
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Message.objects.get(id=response.data["id"]).sender_id, self.user.id)
+
+    def test_sender_can_delete_message(self):
+        message = Message.objects.create(sender=self.user, recipient=self.other, subject="Hello", body="Test message")
+
+        response = self.client.delete(f"/api/communications/messages/{message.id}/")
+
+        self.assertEqual(response.status_code, 204)
+        self.assertFalse(Message.objects.filter(id=message.id).exists())
+
+    def test_recipient_cannot_delete_message(self):
+        message = Message.objects.create(sender=self.user, recipient=self.other, subject="Hello", body="Test message")
+        self.client.force_authenticate(user=self.other)
+
+        response = self.client.delete(f"/api/communications/messages/{message.id}/")
+
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(Message.objects.filter(id=message.id).exists())

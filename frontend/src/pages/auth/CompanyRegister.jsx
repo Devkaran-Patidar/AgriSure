@@ -4,6 +4,7 @@ import { useState } from "react";
 import { apiRequest } from "../../lib/api";
 import { useLanguage } from "../../context/LanguageContext";
 import LanguageSwitcher from "../../components/auth/LanguageSwitcher";
+import termsDocument from "../../assets/documents/AgriSure_Platform_Terms_and_Conditions.pdf";
 
 export default function CompanyRegister() {
   const {
@@ -368,19 +369,15 @@ export default function CompanyRegister() {
                 <span className="text-sm leading-6 text-gray-600">
                   I agree to the{" "}
                   <a
-                    href="/terms"
+                  target="_blank"
+                    rel="noopener noreferrer"
+                    href={termsDocument}
                     className="font-medium text-primary hover:underline"
                   >
-                    Terms & Conditions
-                  </a>{" "}
-                  and{" "}
-                  <a
-                    href="/privacy"
-                    className="font-medium text-primary hover:underline"
-                  >
-                    Privacy Policy
+                    Terms & Conditions with Privacy Policy.
                   </a>
-                  .
+                
+                  
                 </span>
               </label>
 
@@ -398,7 +395,7 @@ export default function CompanyRegister() {
                 disabled={loading}
                 className="btn-primary"
               >
-                {loading ? "Creating Account..." : "Create Company Account"}
+                {loading ? "sending..." : "Submit for Verification"}
               </button>
             </div>
           </form>

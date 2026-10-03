@@ -2,6 +2,7 @@ from datetime import date
 from decimal import Decimal
 
 from django.test import TestCase
+from django.utils import timezone
 from rest_framework.test import APIClient
 
 from Accounts.models import CompanyProfile, FarmerProfile, User
@@ -32,7 +33,8 @@ class PaymentWorkflowTests(TestCase):
         )
         self.contract = Contract.objects.create(
             farmer=self.farmer_profile, company=self.company_profile, crop=crop,
-            agreed_quantity=100, agreed_price=2500
+            agreed_quantity=100, agreed_price=2500, status="ACTIVE",
+            farmer_signed_at=timezone.now(), company_signed_at=timezone.now()
         )
         self.client = APIClient()
 
@@ -51,6 +53,12 @@ class PaymentWorkflowTests(TestCase):
         self.assertEqual(released.status_code, 200)
         self.assertEqual(released.data["status"], "PARTIALLY_RELEASED")
         final_milestone_id = released.data["milestones"][1]["id"]
+
+        self.client.force_authenticate(user=self.farmer)
+        delivered = self.client.post(f"/api/contracts/{self.contract.id}/deliver/")
+        self.assertEqual(delivered.status_code, 200)
+
+        self.client.force_authenticate(user=self.company)
         final_release = self.client.post(f"/api/payments/milestones/{final_milestone_id}/release/")
         self.assertEqual(final_release.status_code, 200)
         self.assertEqual(final_release.data["status"], "RELEASED")

@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions
 from farmer.models import Crop
 from farmer.serializers import CropSerializer
+from contracts.models import Contract
 
 class IsCompanyPermission(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -12,4 +13,6 @@ class CompanyCropViewSet(viewsets.ReadOnlyModelViewSet):
     """
     serializer_class = CropSerializer
     permission_classes = [IsCompanyPermission]
-    queryset = Crop.objects.all().order_by('-created_at')
+    queryset = Crop.objects.exclude(
+        contracts__status__in=('DRAFT', 'NEGOTIATING', 'AGREED', 'ACTIVE', 'COMPLETED')
+    ).order_by('-created_at')

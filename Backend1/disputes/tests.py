@@ -17,7 +17,7 @@ class DisputeEvidenceTests(TestCase):
         company = User.objects.create_user(email="company@test.com", username="company@test.com", password="StrongPass123!", role="COMPANY", is_active=True)
         company_profile = CompanyProfile.objects.create(user=company, company_name="Buyer", business_type="BUYER", contact_person="Test", company_address="Test")
         crop = Crop.objects.create(farmer=farmer_profile, name="Wheat", variety="Test", expected_quantity=10, expected_price=20, sowing_date=date(2026, 1, 1), expected_harvest_date=date(2026, 4, 1))
-        self.contract = Contract.objects.create(farmer=farmer_profile, company=company_profile, crop=crop, agreed_quantity=10, agreed_price=20)
+        self.contract = Contract.objects.create(farmer=farmer_profile, company=company_profile, crop=crop, agreed_quantity=10, agreed_price=20, status="ACTIVE")
         self.client = APIClient()
         self.client.force_authenticate(user=farmer)
 

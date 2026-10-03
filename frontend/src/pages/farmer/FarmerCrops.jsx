@@ -156,18 +156,14 @@ export default function FarmerCrops() {
   };
 
   return (
-    <section className="section-padding bg-soft min-h-screen">
+    <section className="section-padding bg-soft min-h-screen border-8 border-amber-100">
       <div className="container-page">
 
         {/* Header */}
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="flex flex-col gap-1 md:flex-row md:items-end md:justify-between">
           <div>
 
-            <h5 className="section-title text-sm font-bold text-navy">
-              {t("myCrops")}
-            </h5>
-
-            <p className="mt-2 max-w-2xl text-slate-500">
+            <p className="mt-2 max-w-2xl text-slate-700 text-2xl">
               {t("cropsDescription")}
             </p>
           </div>
@@ -181,12 +177,7 @@ export default function FarmerCrops() {
               {showForm ? t("closeForm") : t("addCropContract")}
             </button>
 
-            <Link
-              className="btn-secondary"
-              to="/farmer/profile"
-            >
-              {t("viewProfile")}
-            </Link>
+         
           </div>
         </div>
 

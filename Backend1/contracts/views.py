@@ -35,7 +35,12 @@ class ContractViewSet(viewsets.ModelViewSet):
         raise PermissionDenied("Contract details cannot be edited after creation. Use the approval, signature, and delivery actions instead.")
 
     def destroy(self, request, *args, **kwargs):
-        raise PermissionDenied("Contracts cannot be deleted once created. Use the reject action for draft requests.")
+        contract = self.get_object()
+        if request.user.role != 'COMPANY' or contract.status != 'DRAFT':
+            raise PermissionDenied("Only an unsent draft request can be deleted.")
+        contract.status = 'CANCELLED'
+        contract.save(update_fields=['status', 'updated_at'])
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=['post'])
     def approve(self, request, pk=None):
@@ -52,7 +57,7 @@ class ContractViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'Only contract participants can approve.'}, status=status.HTTP_403_FORBIDDEN)
         if contract.status == 'DRAFT':
             contract.status = 'NEGOTIATING'
-        elif contract.farmer_approved_at and contract.company_approved_at:
+        elif contract.farmer_approved_at and contract.company_approved_at and contract.agreed_price:
             contract.status = 'AGREED'
         contract.save()
         from communications.models import Notification
@@ -75,8 +80,12 @@ class ContractViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def sign(self, request, pk=None):
         contract = self.get_object()
-        if contract.status not in ('AGREED', 'NEGOTIATING'):
-            return Response({'detail': 'Only agreed or negotiating contracts can be signed.'}, status=status.HTTP_400_BAD_REQUEST)
+        if contract.status != 'AGREED':
+            return Response({'detail': 'Only an agreed contract can be signed.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not contract.agreed_price or not contract.farmer_approved_at or not contract.company_approved_at:
+            return Response({'detail': 'Both parties must approve an agreed price before signing.'}, status=status.HTTP_400_BAD_REQUEST)
+        if contract.is_fully_signed:
+            return Response({'detail': 'This contract is already fully signed.'}, status=status.HTTP_400_BAD_REQUEST)
         if request.user.role == 'FARMER':
             contract.farmer_signed_at = timezone.now()
         elif request.user.role == 'COMPANY':
@@ -93,11 +102,12 @@ class ContractViewSet(viewsets.ModelViewSet):
         contract = self.get_object()
         if request.user.role != 'FARMER':
             return Response({'detail': 'Only the farmer can mark the crop as delivered.'}, status=status.HTTP_403_FORBIDDEN)
-        if contract.status not in ('ACTIVE', 'AGREED'):
-            return Response({'detail': 'Only an active or agreed contract can be marked delivered.'}, status=status.HTTP_400_BAD_REQUEST)
+        if contract.status != 'ACTIVE' or not contract.is_fully_signed:
+            return Response({'detail': 'Both parties must sign an active contract before delivery.'}, status=status.HTTP_400_BAD_REQUEST)
 
         contract.status = 'COMPLETED'
-        contract.save(update_fields=['status', 'updated_at'])
+        contract.delivery_at = timezone.now()
+        contract.save(update_fields=['status', 'delivery_at', 'updated_at'])
 
         from communications.models import Notification
         Notification.objects.create(

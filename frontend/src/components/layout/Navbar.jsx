@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { ChevronDown, Leaf, Menu, X } from "lucide-react";
+import { ChevronDown, Leaf, LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { getDashboardPathByRole } from "../../lib/routeSecurity";
@@ -91,6 +91,17 @@ export default function Navbar() {
         </nav>
 
         <div className="flex items-center gap-1 xl:hidden">
+          {user && (
+            <button
+              type="button"
+              className="mobile-nav-icon text-red-600 hover:bg-red-50 hover:text-red-700"
+              aria-label={t("logout")}
+              title={t("logout")}
+              onClick={signOut}
+            >
+              <LogOut size={19} />
+            </button>
+          )}
           <button
             type="button"
             className="mobile-nav-icon"

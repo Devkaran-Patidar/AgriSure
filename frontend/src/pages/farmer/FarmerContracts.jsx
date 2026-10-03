@@ -20,7 +20,7 @@ export default function FarmerContracts() {
     .finally(() => setLoading(false));
 
   const requestContracts = contracts.filter((contract) => contract.status === "DRAFT");
-  const negotiationContracts = contracts.filter((contract) => ["NEGOTIATING", "AGREED"].includes(contract.status));
+  const negotiationContracts = contracts.filter((contract) => contract.status === "NEGOTIATING");
   const agreedContracts = contracts.filter((contract) => contract.status === "AGREED");
   const runningContracts = contracts.filter((contract) => contract.status === "ACTIVE");
   const completedContracts = contracts.filter((contract) => contract.status === "COMPLETED");
@@ -195,18 +195,74 @@ function ContractSection({ title, contracts, role, signed, empty }) {
         <p className="mt-4 rounded-2xl border border-dashed border-slate-300 p-6 text-sm text-slate-500">{empty || "No signed agreements yet."}</p>
       ) : (
         <div className="mt-4 grid gap-5 sm:grid-cols-2">
-          {contracts.map((contract) => (
-            <ContractCard key={contract.id} contract={contract} role={role} signed={signed} />
-          ))}
+          {contracts.map((contract) => title === "Completed after delivery"
+            ? <CompletedContractCard key={contract.id} contract={contract} role={role} />
+            : <ContractCard key={contract.id} contract={contract} role={role} signed={signed} />)}
         </div>
       )}
     </section>
   );
 }
 
+function CompletedContractCard({ contract, role }) {
+  const [finalReleased, setFinalReleased] = useState(null);
+  const [existingDispute, setExistingDispute] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    Promise.all([apiRequest("/payments/accounts/"), apiRequest("/disputes/")])
+      .then(([accounts, disputes]) => {
+        const account = accounts.find((item) => item.contract_id === contract.id);
+        const finalMilestone = account?.milestones?.find((item) => item.sequence === 2);
+        setFinalReleased(finalMilestone?.status === "RELEASED");
+        setExistingDispute(disputes.some((item) => item.contract === contract.id && ["OPEN", "UNDER_REVIEW"].includes(item.status)));
+      })
+      .catch(() => setFinalReleased(false));
+  }, [contract.id]);
+
+  const reportUnpaid = async () => {
+    setPending(true);
+    setNotice("");
+    try {
+      await apiRequest("/disputes/", {
+        method: "POST",
+        body: JSON.stringify({
+          contract: contract.id,
+          title: "Final payment not released",
+          description: `The crop was delivered for contract #${contract.id}, but the buyer has not released the remaining 80% payment.`,
+          priority: "HIGH",
+        }),
+      });
+      setExistingDispute(true);
+      setNotice("Payment dispute submitted for admin review.");
+    } catch (error) {
+      setNotice(error.message || "Unable to submit payment dispute.");
+    } finally {
+      setPending(false);
+    }
+  };
+
+  return (
+    <div>
+      <ContractCard contract={contract} role={role} signed />
+      {finalReleased === false && (
+        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <p className="text-sm font-semibold text-amber-800">The 80% final payment is still pending.</p>
+          <button className="btn-secondary mt-3" disabled={pending || existingDispute} onClick={reportUnpaid}>
+            {existingDispute ? "Payment dispute under review" : pending ? "Submitting..." : "Report unpaid 80%"}
+          </button>
+          {notice && <p className="mt-2 text-sm font-bold text-primary">{notice}</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function RunningContractCard({ contract, role }) {
   const [actionPending, setActionPending] = useState("");
   const [notice, setNotice] = useState("");
+  const [deliveryRecorded, setDeliveryRecorded] = useState(false);
 
   const farmerDetails = contract.farmer_details || {};
   const buyerDetails = contract.company_details || {};
@@ -223,6 +279,7 @@ function RunningContractCard({ contract, role }) {
       method: "POST",
       body: JSON.stringify({
         recipient: Number(buyerRecipientId),
+        contract: contract.id,
         subject,
         body,
       }),
@@ -233,11 +290,34 @@ function RunningContractCard({ contract, role }) {
     setActionPending("deliver");
     setNotice("");
     try {
+      await apiRequest(`/contracts/${contract.id}/deliver/`, { method: "POST" });
+      setDeliveryRecorded(true);
       const deliveryMessage = `${contract.crop_details?.name || "Crop"} has been delivered to ${contract.delivery_location || "the agreed delivery point"}. Please confirm receipt and complete the final payment process.`;
       await sendCommunication(`Delivery update for contract #${contract.id}`, deliveryMessage);
-      setNotice("Delivery update sent to buyer");
+      setNotice("Delivery recorded and update sent to buyer");
     } catch (error) {
       setNotice(error.message || "Unable to send delivery update.");
+    } finally {
+      setActionPending("");
+    }
+  };
+
+  const reportUnpaidDelivery = async () => {
+    setActionPending("dispute");
+    setNotice("");
+    try {
+      await apiRequest("/disputes/", {
+        method: "POST",
+        body: JSON.stringify({
+          contract: contract.id,
+          title: "Final payment not released",
+          description: `The crop was delivered for contract #${contract.id}, but the buyer has not released the remaining 80% payment.`,
+          priority: "HIGH",
+        }),
+      });
+      setNotice("Payment dispute submitted for admin review");
+    } catch (error) {
+      setNotice(error.message || "Unable to submit payment dispute.");
     } finally {
       setActionPending("");
     }
@@ -301,12 +381,15 @@ function RunningContractCard({ contract, role }) {
       </div>
 
       <div className="mt-6 flex flex-wrap gap-3">
-        <button className="btn-primary" disabled={actionPending !== ""} onClick={handleDeliverCrop}>
-          {actionPending === "deliver" ? "Sending..." : "Deliver crop"}
+        <button className="btn-primary" disabled={actionPending !== "" || deliveryRecorded} onClick={handleDeliverCrop}>
+          {deliveryRecorded ? "Delivery recorded" : actionPending === "deliver" ? "Recording..." : "Record delivery"}
         </button>
         <button className="btn-secondary" disabled={actionPending !== ""} onClick={handleFinalPaymentNote}>
           {actionPending === "payment" ? "Sending..." : "Final payment release communication"}
         </button>
+        {deliveryRecorded && <button className="btn-secondary" disabled={actionPending !== ""} onClick={reportUnpaidDelivery}>
+          {actionPending === "dispute" ? "Submitting..." : "Report unpaid 80%"}
+        </button>}
       </div>
 
       {notice && <p className="mt-4 text-sm font-bold text-primary">{notice}</p>}
