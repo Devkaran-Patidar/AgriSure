@@ -1,4 +1,4 @@
-# AgriSure — Assured Contract Farming System for Stable Market Access
+# AgriSure — Contract Farming System for Stable Market Access
 
 > **A digital contract farming platform designed to connect farmers and buyers through transparent crop procurement, contract management, milestone-based payments, monitoring, and communication.**
 
