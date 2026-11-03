@@ -19,7 +19,7 @@ class ContractSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contract
         fields = '__all__'
-        read_only_fields = ['farmer', 'company', 'status']
+        read_only_fields = ['farmer', 'company', 'status', 'price_agreed_at']
 
     def get_farmer_details(self, obj):
         return {"id": obj.farmer.user_id, "name": obj.farmer.user.get_full_name(), "email": obj.farmer.user.email, "farm_name": obj.farmer.farm_name, "district": obj.farmer.district, "state": obj.farmer.state}

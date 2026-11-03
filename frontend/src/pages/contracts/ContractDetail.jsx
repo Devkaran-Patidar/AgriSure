@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { apiRequest } from "../../lib/api";
+import { apiRequest, downloadFile } from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
 import StatusBadge from "../../components/common/StatusBadge";
 import { formatContractTitle, formatCurrency } from "../../lib/display";
-import contractPdf from "../../assets/documents/AgriSure_Digital_Crop_Contract_Agreement.pdf";
 
 export default function ContractDetail() {
   const { id } = useParams();
@@ -14,6 +13,7 @@ export default function ContractDetail() {
   const [offerPrice, setOfferPrice] = useState("");
   const [actionPending, setActionPending] = useState("");
   const [advancePending, setAdvancePending] = useState(false);
+  const [pdfPending, setPdfPending] = useState(false);
 
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -157,6 +157,17 @@ export default function ContractDetail() {
     setAdvancePending(false);
   };
 
+  const downloadContract = async () => {
+    setPdfPending(true);
+    try {
+      await downloadFile(`/contracts/${id}/pdf/`, `agrisure-contract-${id}.pdf`);
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setPdfPending(false);
+    }
+  };
+
   if (!contract) {
     return (
       <div className="grid min-h-[60vh] place-items-center">
@@ -208,10 +219,11 @@ export default function ContractDetail() {
             </div>
 
             {/* Download Agreement */}
-            {contract.fully_signed && (
-              <a
-                href={contractPdf}
-                download="AgriSure_Digital_Crop_Contract_Agreement.pdf"
+            {["AGREED", "ACTIVE", "COMPLETED"].includes(contract.status) && (
+              <button
+                type="button"
+                onClick={downloadContract}
+                disabled={pdfPending}
                 className="btn-secondary inline-flex items-center gap-2"
               >
                 <svg
@@ -229,8 +241,8 @@ export default function ContractDetail() {
                   <line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
 
-                Download Agreement
-              </a>
+                {pdfPending ? "Preparing PDF..." : "Download Contract PDF"}
+              </button>
             )}
           </div>
 
@@ -272,8 +284,7 @@ export default function ContractDetail() {
 
                 <p className="mt-1 text-sm text-emerald-800">
                   The digital agreement has been approved and signed by both
-                  parties. Download the official agreement document using the
-                  button above.
+                  parties.                   Download the generated agreement document using the button above.
                 </p>
               </div>
             </div>

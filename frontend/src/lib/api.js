@@ -44,3 +44,23 @@ export async function login(email,password) {
 }
 export function logout(){ ["access_token","refresh_token","user"].forEach(k=>localStorage.removeItem(k)); }
 export function getStoredUser(){ try{return JSON.parse(localStorage.getItem("user"))}catch{return null} }
+
+export async function downloadFile(path, filename) {
+  const token = localStorage.getItem("access_token");
+  const response = await fetch(`${API_BASE_URL}/${path.replace(/^\/+/, "").replace(/^api\//, "")}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.detail || "Unable to download the contract.");
+  }
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}

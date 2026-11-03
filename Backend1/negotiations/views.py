@@ -7,6 +7,7 @@ from .serializers import NegotiationOfferSerializer
 from contracts.models import Contract
 from communications.models import Notification
 from payments.views import get_or_create_account
+from django.utils import timezone
 
 class NegotiationOfferViewSet(viewsets.ModelViewSet):
     serializer_class = NegotiationOfferSerializer
@@ -48,8 +49,9 @@ class NegotiationOfferViewSet(viewsets.ModelViewSet):
             offer.save(update_fields=['status'])
             contract = offer.contract
             contract.agreed_price = offer.offered_price
+            contract.price_agreed_at = timezone.now()
             contract.status = 'AGREED'
-            contract.save(update_fields=['agreed_price', 'status', 'updated_at'])
+            contract.save(update_fields=['agreed_price', 'price_agreed_at', 'status', 'updated_at'])
             NegotiationOffer.objects.filter(contract=contract, status='PENDING').exclude(pk=offer.pk).update(status='REJECTED')
         get_or_create_account(contract)
 

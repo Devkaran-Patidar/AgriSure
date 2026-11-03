@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Search } from "lucide-react";
-import { apiRequest } from "../../lib/api";
+import { apiRequest, downloadFile } from "../../lib/api";
 import StatusBadge from "../../components/common/StatusBadge";
 import { formatCurrency, formatStatus } from "../../lib/display";
-import contractPdf from "../../assets/documents/AgriSure_Digital_Crop_Contract_Agreement.pdf";
 
 const STATUS_OPTIONS = ["ALL", "DRAFT", "NEGOTIATING", "AGREED", "ACTIVE", "COMPLETED", "CANCELLED"];
 
@@ -110,7 +109,14 @@ export default function AdminContracts() {
                     <td><StatusBadge status={row.status} /></td>
                     <td>{row.agreed_price ? formatCurrency(row.agreed_price) : "Pending"}</td>
                     <td>{row.created_at ? new Date(row.created_at).toLocaleDateString() : "—"}</td>
-                    <td><a className="font-bold text-primary" href={contractPdf} target="_blank" rel="noreferrer">View PDF</a></td>
+                    <td>
+                      <button
+                        className="font-bold text-primary"
+                        onClick={() => downloadFile(`/contracts/${row.id}/pdf/`, `agrisure-contract-${row.id}.pdf`).catch((downloadError) => setError(downloadError.message))}
+                      >
+                        Download PDF
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
